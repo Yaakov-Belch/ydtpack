@@ -236,11 +236,11 @@ static inline int unpack_execute(unpack_context* ctx, const char* data, Py_ssize
                 again_fixed_trail_if_zero(ACS_EXT_VALUE, *(uint8_t*)n+1, _ext_zero);
             case CS_EXT_16:
                 again_fixed_trail_if_zero(ACS_EXT_VALUE,
-                                          _msgpack_load16(uint16_t,n)+1,
+                                          _ydtpack_load16(uint16_t,n)+1,
                                           _ext_zero);
             case CS_EXT_32:
                 again_fixed_trail_if_zero(ACS_EXT_VALUE,
-                                          _msgpack_load32(uint32_t,n)+1,
+                                          _ydtpack_load32(uint32_t,n)+1,
                                           _ext_zero);
             case CS_FLOAT: {
                     double f;
@@ -261,27 +261,27 @@ static inline int unpack_execute(unpack_context* ctx, const char* data, Py_ssize
             case CS_UINT_8:
                 push_fixed_value(_uint8, *(uint8_t*)n);
             case CS_UINT_16:
-                push_fixed_value(_uint16, _msgpack_load16(uint16_t,n));
+                push_fixed_value(_uint16, _ydtpack_load16(uint16_t,n));
             case CS_UINT_32:
-                push_fixed_value(_uint32, _msgpack_load32(uint32_t,n));
+                push_fixed_value(_uint32, _ydtpack_load32(uint32_t,n));
             case CS_UINT_64:
-                push_fixed_value(_uint64, _msgpack_load64(uint64_t,n));
+                push_fixed_value(_uint64, _ydtpack_load64(uint64_t,n));
 
             case CS_INT_8:
                 push_fixed_value(_int8, *(int8_t*)n);
             case CS_INT_16:
-                push_fixed_value(_int16, _msgpack_load16(int16_t,n));
+                push_fixed_value(_int16, _ydtpack_load16(int16_t,n));
             case CS_INT_32:
-                push_fixed_value(_int32, _msgpack_load32(int32_t,n));
+                push_fixed_value(_int32, _ydtpack_load32(int32_t,n));
             case CS_INT_64:
-                push_fixed_value(_int64, _msgpack_load64(int64_t,n));
+                push_fixed_value(_int64, _ydtpack_load64(int64_t,n));
 
             case CS_BIN_8:
                 again_fixed_trail_if_zero(ACS_BIN_VALUE, *(uint8_t*)n, _bin_zero);
             case CS_BIN_16:
-                again_fixed_trail_if_zero(ACS_BIN_VALUE, _msgpack_load16(uint16_t,n), _bin_zero);
+                again_fixed_trail_if_zero(ACS_BIN_VALUE, _ydtpack_load16(uint16_t,n), _bin_zero);
             case CS_BIN_32:
-                again_fixed_trail_if_zero(ACS_BIN_VALUE, _msgpack_load32(uint32_t,n), _bin_zero);
+                again_fixed_trail_if_zero(ACS_BIN_VALUE, _ydtpack_load32(uint32_t,n), _bin_zero);
             case ACS_BIN_VALUE:
             _bin_zero:
                 push_variable_value(_bin, data, n, trail);
@@ -289,9 +289,9 @@ static inline int unpack_execute(unpack_context* ctx, const char* data, Py_ssize
             case CS_RAW_8:
                 again_fixed_trail_if_zero(ACS_RAW_VALUE, *(uint8_t*)n, _raw_zero);
             case CS_RAW_16:
-                again_fixed_trail_if_zero(ACS_RAW_VALUE, _msgpack_load16(uint16_t,n), _raw_zero);
+                again_fixed_trail_if_zero(ACS_RAW_VALUE, _ydtpack_load16(uint16_t,n), _raw_zero);
             case CS_RAW_32:
-                again_fixed_trail_if_zero(ACS_RAW_VALUE, _msgpack_load32(uint32_t,n), _raw_zero);
+                again_fixed_trail_if_zero(ACS_RAW_VALUE, _ydtpack_load32(uint32_t,n), _raw_zero);
             case ACS_RAW_VALUE:
             _raw_zero:
                 push_variable_value(_raw, data, n, trail);
@@ -301,16 +301,16 @@ static inline int unpack_execute(unpack_context* ctx, const char* data, Py_ssize
                 push_variable_value(_ext, data, n, trail);
 
             case CS_ARRAY_16:
-                start_container(_array, _msgpack_load16(uint16_t,n), CT_ARRAY_ITEM);
+                start_container(_array, _ydtpack_load16(uint16_t,n), CT_ARRAY_ITEM);
             case CS_ARRAY_32:
                 /* FIXME security guard */
-                start_container(_array, _msgpack_load32(uint32_t,n), CT_ARRAY_ITEM);
+                start_container(_array, _ydtpack_load32(uint32_t,n), CT_ARRAY_ITEM);
 
             case CS_MAP_16:
-                start_container(_map, _msgpack_load16(uint16_t,n), CT_MAP_KEY);
+                start_container(_map, _ydtpack_load16(uint16_t,n), CT_MAP_KEY);
             case CS_MAP_32:
                 /* FIXME security guard */
-                start_container(_map, _msgpack_load32(uint32_t,n), CT_MAP_KEY);
+                start_container(_map, _ydtpack_load32(uint32_t,n), CT_MAP_KEY);
 
             default:
                 goto _failed;
@@ -412,11 +412,11 @@ static inline int unpack_container_header(unpack_context* ctx, const char* data,
     switch (*p) {
     case var_offset:
         inc_offset(3);
-        size = _msgpack_load16(uint16_t, p + 1);
+        size = _ydtpack_load16(uint16_t, p + 1);
         break;
     case var_offset + 1:
         inc_offset(5);
-        size = _msgpack_load32(uint32_t, p + 1);
+        size = _ydtpack_load32(uint32_t, p + 1);
         break;
 #ifdef USE_CASE_RANGE
     case fixed_offset + 0x0 ... fixed_offset + 0xf:

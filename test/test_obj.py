@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from pytest import raises
-from msgpack_sorted import packb, unpackb
+from ydtpack import packb, unpackb
 
 
 def _decode_complex(obj):

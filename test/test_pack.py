@@ -8,7 +8,7 @@ import sys
 import pytest
 from pytest import raises, xfail
 
-from msgpack_sorted import packb, unpackb, Unpacker, Packer, pack
+from ydtpack import packb, unpackb, Unpacker, Packer, pack
 
 
 def check(data, use_list=False):

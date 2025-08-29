@@ -18,7 +18,7 @@
 #ifndef MSGPACK_UNPACK_DEFINE_H__
 #define MSGPACK_UNPACK_DEFINE_H__
 
-#include "msgpack_sorted/sysdep.h"
+#include "ydtpack/sysdep.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -78,18 +78,18 @@ typedef enum {
     ACS_RAW_VALUE,
     ACS_BIN_VALUE,
     ACS_EXT_VALUE,
-} msgpack_unpack_state;
+} ydtpack_unpack_state;
 
 
 typedef enum {
     CT_ARRAY_ITEM,
     CT_MAP_KEY,
     CT_MAP_VALUE,
-} msgpack_container_type;
+} ydtpack_container_type;
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* msgpack_sorted/unpack_define.h */
+#endif /* ydtpack/unpack_define.h */

@@ -77,17 +77,17 @@ qthelp:
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/msgpack.qhcp"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/ydtpack.qhcp"
 	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/msgpack.qhc"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/ydtpack.qhc"
 
 devhelp:
 	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
 	@echo
 	@echo "Build finished."
 	@echo "To view the help file:"
-	@echo "# mkdir -p $$HOME/.local/share/devhelp/msgpack"
-	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/msgpack"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/ydtpack"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/ydtpack"
 	@echo "# devhelp"
 
 epub:
@@ -156,4 +156,4 @@ serve: html
 	python3 -m http.server -d _build/html
 
 zip: html
-	cd _build/html && zip -r ../../../msgpack-doc.zip .
+	cd _build/html && zip -r ../../../ydtpack-doc.zip .

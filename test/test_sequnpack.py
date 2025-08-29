@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import io
-from msgpack_sorted import Unpacker, BufferFull
-from msgpack_sorted import pack, packb
-from msgpack_sorted.exceptions import OutOfData
+from ydtpack import Unpacker, BufferFull
+from ydtpack import pack, packb
+from ydtpack.exceptions import OutOfData
 from pytest import raises
 
 

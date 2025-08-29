@@ -5,7 +5,7 @@ import struct
 
 
 class ExtType(namedtuple("ExtType", "code data")):
-    """ExtType represents ext type in msgpack."""
+    """ExtType represents ext type in ydtpack."""
 
     def __new__(cls, code, data):
         if not isinstance(code, int):
@@ -18,10 +18,10 @@ class ExtType(namedtuple("ExtType", "code data")):
 
 
 class Timestamp:
-    """Timestamp represents the Timestamp extension type in msgpack.
+    """Timestamp represents the Timestamp extension type in ydtpack.
 
-    When built with Cython, msgpack uses C methods to pack and unpack `Timestamp`. When using pure-Python
-    msgpack, :func:`to_bytes` and :func:`from_bytes` are used to pack and unpack `Timestamp`.
+    When built with Cython, ydtpack uses C methods to pack and unpack `Timestamp`. When using pure-Python
+    ydtpack, :func:`to_bytes` and :func:`from_bytes` are used to pack and unpack `Timestamp`.
 
     This class is immutable: Do not override seconds and nanoseconds.
     """
@@ -71,12 +71,12 @@ class Timestamp:
     def from_bytes(b):
         """Unpack bytes into a `Timestamp` object.
 
-        Used for pure-Python msgpack unpacking.
+        Used for pure-Python ydtpack unpacking.
 
-        :param b: Payload from msgpack ext message with code -1
+        :param b: Payload from ydtpack ext message with code -1
         :type b: bytes
 
-        :returns: Timestamp object unpacked from msgpack ext payload
+        :returns: Timestamp object unpacked from ydtpack ext payload
         :rtype: Timestamp
         """
         if len(b) == 4:
@@ -97,7 +97,7 @@ class Timestamp:
     def to_bytes(self):
         """Pack this Timestamp object into bytes.
 
-        Used for pure-Python msgpack packing.
+        Used for pure-Python ydtpack packing.
 
         :returns data: Payload for EXT message with code -1 (timestamp type)
         :rtype: bytes

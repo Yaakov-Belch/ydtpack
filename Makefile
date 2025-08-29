@@ -1,4 +1,4 @@
-PYTHON_SOURCES = msgpack_sorted test setup.py
+PYTHON_SOURCES = ydtpack test setup.py
 
 .PHONY: all
 all: cython
@@ -14,13 +14,13 @@ pyupgrade:
 
 .PHONY: cython
 cython:
-	cython --cplus msgpack_sorted/_cmsgpack.pyx
+	cython --cplus ydtpack/_cydtpack.pyx
 
 .PHONY: test
 test: cython
 	pip install -e .
 	pytest -v test
-	MSGPACK_PUREPYTHON=1 pytest -v test
+	YDTPACK_PUREPYTHON=1 pytest -v test
 
 .PHONY: serve-doc
 serve-doc: all
@@ -29,10 +29,10 @@ serve-doc: all
 .PHONY: clean
 clean:
 	rm -rf build
-	rm -f msgpack_sorted/_cmsgpack.cpp
-	rm -f msgpack_sorted/_cmsgpack.*.so
-	rm -f msgpack_sorted/_cmsgpack.*.pyd
-	rm -rf msgpack_sorted/__pycache__
+	rm -f ydtpack/_cydtpack.cpp
+	rm -f ydtpack/_cydtpack.*.so
+	rm -f ydtpack/_cydtpack.*.pyd
+	rm -rf ydtpack/__pycache__
 	rm -rf test/__pycache__
 
 .PHONY: update-docker

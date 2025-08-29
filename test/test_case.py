@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from msgpack_sorted import packb, unpackb
+from ydtpack import packb, unpackb
 
 
 def check(length, obj, use_bin_type=True):

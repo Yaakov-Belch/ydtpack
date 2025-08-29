@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import pytest
 
-from msgpack_sorted import (
+from ydtpack import (
     packb,
     unpackb,
     Packer,

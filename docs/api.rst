@@ -1,7 +1,7 @@
 API reference
 =============
 
-.. module:: msgpack_sorted
+.. module:: ydtpack
 
 .. autofunction:: pack
 
@@ -34,11 +34,11 @@ API reference
 exceptions
 ----------
 
-These exceptions are accessible via `msgpack_sorted` package.
-(For example, `msgpack_sorted.OutOfData` is shortcut
-for `msgpack_sorted.exceptions.OutOfData`)
+These exceptions are accessible via `ydtpack` package.
+(For example, `ydtpack.OutOfData` is shortcut
+for `ydtpack.exceptions.OutOfData`)
 
-.. automodule:: msgpack_sorted.exceptions
+.. automodule:: ydtpack.exceptions
     :members:
     :undoc-members:
     :show-inheritance:

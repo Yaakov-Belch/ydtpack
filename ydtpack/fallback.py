@@ -1,4 +1,4 @@
-"""Fallback pure Python implementation of msgpack"""
+"""Fallback pure Python implementation of ydtpack"""
 from datetime import datetime as _DateTime
 import sys
 import struct
@@ -80,7 +80,7 @@ def unpackb(packed, **kwargs):
 
     Raises ``ExtraData`` when *packed* contains extra bytes.
     Raises ``ValueError`` when *packed* is incomplete.
-    Raises ``FormatError`` when *packed* is not valid msgpack.
+    Raises ``FormatError`` when *packed* is not valid ydtpack.
     Raises ``StackError`` when *packed* contains too nested.
     Other exceptions can be raised during unpacking.
 
@@ -145,11 +145,11 @@ class Unpacker:
         Used as `file_like.read(read_size)`. (default: `min(16*1024, max_buffer_size)`)
 
     :param bool use_list:
-        If true, unpack msgpack array to Python list.
+        If true, unpack ydtpack array to Python list.
         Otherwise, unpack to Python tuple. (default: True)
 
     :param bool raw:
-        If true, unpack msgpack raw to Python bytes.
+        If true, unpack ydtpack raw to Python bytes.
         Otherwise, unpack to Python str by decoding with UTF-8 encoding (default).
 
     :param int timestamp:
@@ -165,17 +165,17 @@ class Unpacker:
 
     :param callable object_hook:
         When specified, it should be callable.
-        Unpacker calls it with a dict argument after unpacking msgpack map.
+        Unpacker calls it with a dict argument after unpacking ydtpack map.
         (See also simplejson)
 
     :param callable object_pairs_hook:
         When specified, it should be callable.
-        Unpacker calls it with a list of key-value pairs after unpacking msgpack map.
+        Unpacker calls it with a list of key-value pairs after unpacking ydtpack map.
         (See also simplejson)
 
     :param str unicode_errors:
         The error handler for decoding unicode. (default: 'strict')
-        This option should be used only when you have msgpack data which
+        This option should be used only when you have ydtpack data which
         contains invalid UTF-8 string.
 
     :param int max_buffer_size:
@@ -223,7 +223,7 @@ class Unpacker:
 
     Raises ``ExtraData`` when *packed* contains extra bytes.
     Raises ``OutOfData`` when *packed* is incomplete.
-    Raises ``FormatError`` when *packed* is not valid msgpack.
+    Raises ``FormatError`` when *packed* is not valid ydtpack.
     Raises ``StackError`` when *packed* contains too nested.
     Other exceptions can be raised during unpacking.
     """
@@ -628,7 +628,7 @@ class Packer:
         If set this to false, use `bytes()` to get content and `.reset()` to clear buffer.
 
     :param bool use_bin_type:
-        Use bin type introduced in msgpack spec 2.0 for bytes.
+        Use bin type introduced in ydtpack spec 2.0 for bytes.
         It also enables str8 type for unicode. (default: True)
 
     :param bool strict_types:
@@ -670,7 +670,7 @@ class Packer:
 
     Raises ``ExtraData`` when *packed* contains extra bytes.
     Raises ``OutOfData`` when *packed* is incomplete.
-    Raises ``FormatError`` when *packed* is not valid msgpack.
+    Raises ``FormatError`` when *packed* is not valid ydtpack.
     Raises ``StackError`` when *packed* contains too nested.
     Other exceptions can be raised during unpacking.
     """

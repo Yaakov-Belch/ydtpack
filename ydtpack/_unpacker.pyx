@@ -23,7 +23,7 @@ cdef object giga = 1_000_000_000
 
 
 cdef extern from "unpack.h":
-    ctypedef struct msgpack_user:
+    ctypedef struct ydtpack_user:
         bint use_list
         bint raw
         bint has_pairs_hook # call object_hook with k-v pairs
@@ -43,7 +43,7 @@ cdef extern from "unpack.h":
         Py_ssize_t max_ext_len
 
     ctypedef struct unpack_context:
-        msgpack_user user
+        ydtpack_user user
         PyObject* obj
         Py_ssize_t count
 
@@ -154,7 +154,7 @@ def unpackb(object packed, *, object object_hook=None, object list_hook=None,
 
     Raises ``ExtraData`` when *packed* contains extra bytes.
     Raises ``ValueError`` when *packed* is incomplete.
-    Raises ``FormatError`` when *packed* is not valid msgpack.
+    Raises ``FormatError`` when *packed* is not valid ydtpack.
     Raises ``StackError`` when *packed* contains too nested.
     Other exceptions can be raised during unpacking.
 
@@ -223,11 +223,11 @@ cdef class Unpacker(object):
         Used as `file_like.read(read_size)`. (default: `min(16*1024, max_buffer_size)`)
 
     :param bool use_list:
-        If true, unpack msgpack array to Python list.
+        If true, unpack ydtpack array to Python list.
         Otherwise, unpack to Python tuple. (default: True)
 
     :param bool raw:
-        If true, unpack msgpack raw to Python bytes.
+        If true, unpack ydtpack raw to Python bytes.
         Otherwise, unpack to Python str by decoding with UTF-8 encoding (default).
 
     :param int timestamp:
@@ -243,17 +243,17 @@ cdef class Unpacker(object):
 
     :param callable object_hook:
         When specified, it should be callable.
-        Unpacker calls it with a dict argument after unpacking msgpack map.
+        Unpacker calls it with a dict argument after unpacking ydtpack map.
         (See also simplejson)
 
     :param callable object_pairs_hook:
         When specified, it should be callable.
-        Unpacker calls it with a list of key-value pairs after unpacking msgpack map.
+        Unpacker calls it with a list of key-value pairs after unpacking ydtpack map.
         (See also simplejson)
 
     :param str unicode_errors:
         The error handler for decoding unicode. (default: 'strict')
-        This option should be used only when you have msgpack data which
+        This option should be used only when you have ydtpack data which
         contains invalid UTF-8 string.
 
     :param int max_buffer_size:
@@ -301,7 +301,7 @@ cdef class Unpacker(object):
 
     Raises ``ExtraData`` when *packed* contains extra bytes.
     Raises ``OutOfData`` when *packed* is incomplete.
-    Raises ``FormatError`` when *packed* is not valid msgpack.
+    Raises ``FormatError`` when *packed* is not valid ydtpack.
     Raises ``StackError`` when *packed* contains too nested.
     Other exceptions can be raised during unpacking.
     """

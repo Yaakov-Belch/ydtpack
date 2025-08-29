@@ -6,8 +6,8 @@ dist/*
 *.pyo
 *.so
 *~
-msgpack_sorted/__version__.py
-msgpack_sorted/*.cpp
+ydtpack/__version__.py
+ydtpack/*.cpp
 *.egg-info
 .eggs/
 /venv

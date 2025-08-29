@@ -2,7 +2,7 @@
 
 import sys
 import pytest
-from msgpack_sorted import packb, unpackb
+from ydtpack import packb, unpackb
 
 
 def test_unpack_buffer():

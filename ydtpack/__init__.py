@@ -13,7 +13,7 @@ if os.environ.get("MSGPACK_PUREPYTHON"):
     from .fallback import Packer, unpackb, Unpacker
 else:
     try:
-        from ._cmsgpack import Packer, unpackb, Unpacker
+        from ._cydtpack import Packer, unpackb, Unpacker
     except ImportError:
         from .fallback import Packer, unpackb, Unpacker
 

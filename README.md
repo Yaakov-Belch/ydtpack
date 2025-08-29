@@ -1,2 +1,2 @@
 # ydtpack
-msgpack-inspired serialization of typed data objects
+ydtpack-inspired serialization of typed data objects

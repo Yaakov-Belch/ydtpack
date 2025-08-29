@@ -20,29 +20,29 @@ cdef extern from "Python.h":
 
 
 cdef extern from "pack.h":
-    struct msgpack_packer:
+    struct ydtpack_packer:
         char* buf
         size_t length
         size_t buf_size
         bint use_bin_type
 
-    int msgpack_pack_int(msgpack_packer* pk, int d)
-    int msgpack_pack_nil(msgpack_packer* pk)
-    int msgpack_pack_true(msgpack_packer* pk)
-    int msgpack_pack_false(msgpack_packer* pk)
-    int msgpack_pack_long(msgpack_packer* pk, long d)
-    int msgpack_pack_long_long(msgpack_packer* pk, long long d)
-    int msgpack_pack_unsigned_long_long(msgpack_packer* pk, unsigned long long d)
-    int msgpack_pack_float(msgpack_packer* pk, float d)
-    int msgpack_pack_double(msgpack_packer* pk, double d)
-    int msgpack_pack_array(msgpack_packer* pk, size_t l)
-    int msgpack_pack_map(msgpack_packer* pk, size_t l)
-    int msgpack_pack_raw(msgpack_packer* pk, size_t l)
-    int msgpack_pack_bin(msgpack_packer* pk, size_t l)
-    int msgpack_pack_raw_body(msgpack_packer* pk, char* body, size_t l)
-    int msgpack_pack_ext(msgpack_packer* pk, char typecode, size_t l)
-    int msgpack_pack_timestamp(msgpack_packer* x, long long seconds, unsigned long nanoseconds);
-    int msgpack_pack_unicode(msgpack_packer* pk, object o, long long limit)
+    int ydtpack_pack_int(ydtpack_packer* pk, int d)
+    int ydtpack_pack_nil(ydtpack_packer* pk)
+    int ydtpack_pack_true(ydtpack_packer* pk)
+    int ydtpack_pack_false(ydtpack_packer* pk)
+    int ydtpack_pack_long(ydtpack_packer* pk, long d)
+    int ydtpack_pack_long_long(ydtpack_packer* pk, long long d)
+    int ydtpack_pack_unsigned_long_long(ydtpack_packer* pk, unsigned long long d)
+    int ydtpack_pack_float(ydtpack_packer* pk, float d)
+    int ydtpack_pack_double(ydtpack_packer* pk, double d)
+    int ydtpack_pack_array(ydtpack_packer* pk, size_t l)
+    int ydtpack_pack_map(ydtpack_packer* pk, size_t l)
+    int ydtpack_pack_raw(ydtpack_packer* pk, size_t l)
+    int ydtpack_pack_bin(ydtpack_packer* pk, size_t l)
+    int ydtpack_pack_raw_body(ydtpack_packer* pk, char* body, size_t l)
+    int ydtpack_pack_ext(ydtpack_packer* pk, char typecode, size_t l)
+    int ydtpack_pack_timestamp(ydtpack_packer* x, long long seconds, unsigned long nanoseconds);
+    int ydtpack_pack_unicode(ydtpack_packer* pk, object o, long long limit)
 
 cdef extern from "buff_converter.h":
     object buff_to_buff(char *, Py_ssize_t)
@@ -83,7 +83,7 @@ cdef class Packer(object):
         If set this to false, use `bytes()` to get content and `.reset()` to clear buffer.
 
     :param bool use_bin_type:
-        Use bin type introduced in msgpack spec 2.0 for bytes.
+        Use bin type introduced in ydtpack spec 2.0 for bytes.
         It also enables str8 type for unicode. (default: True)
 
     :param bool strict_types:
@@ -106,7 +106,7 @@ cdef class Packer(object):
     :param bool sort_keys:
         Sort output dictionaries by key. (default: False)
     """
-    cdef msgpack_packer pk
+    cdef ydtpack_packer pk
     cdef object _default
     cdef object _berrors
     cdef const char *unicode_errors
@@ -170,21 +170,21 @@ cdef class Packer(object):
 
         while True:
             if o is None:
-                ret = msgpack_pack_nil(&self.pk)
+                ret = ydtpack_pack_nil(&self.pk)
             elif o is True:
-                ret = msgpack_pack_true(&self.pk)
+                ret = ydtpack_pack_true(&self.pk)
             elif o is False:
-                ret = msgpack_pack_false(&self.pk)
+                ret = ydtpack_pack_false(&self.pk)
             elif PyLong_CheckExact(o) if strict_types else PyLong_Check(o):
                 # PyInt_Check(long) is True for Python 3.
                 # So we should test long before int.
                 try:
                     if o > 0:
                         ullval = o
-                        ret = msgpack_pack_unsigned_long_long(&self.pk, ullval)
+                        ret = ydtpack_pack_unsigned_long_long(&self.pk, ullval)
                     else:
                         llval = o
-                        ret = msgpack_pack_long_long(&self.pk, llval)
+                        ret = ydtpack_pack_long_long(&self.pk, llval)
                 except OverflowError as oe:
                     if not default_used and self._default is not None:
                         o = self._default(o)
@@ -194,25 +194,25 @@ cdef class Packer(object):
                         raise OverflowError("Integer value out of range")
             elif PyInt_CheckExact(o) if strict_types else PyInt_Check(o):
                 longval = o
-                ret = msgpack_pack_long(&self.pk, longval)
+                ret = ydtpack_pack_long(&self.pk, longval)
             elif PyFloat_CheckExact(o) if strict_types else PyFloat_Check(o):
                 if self.use_float:
                    fval = o
-                   ret = msgpack_pack_float(&self.pk, fval)
+                   ret = ydtpack_pack_float(&self.pk, fval)
                 else:
                    dval = o
-                   ret = msgpack_pack_double(&self.pk, dval)
+                   ret = ydtpack_pack_double(&self.pk, dval)
             elif PyBytesLike_CheckExact(o) if strict_types else PyBytesLike_Check(o):
                 L = Py_SIZE(o)
                 if L > ITEM_LIMIT:
                     PyErr_Format(ValueError, b"%.200s object is too large", Py_TYPE(o).tp_name)
                 rawval = o
-                ret = msgpack_pack_bin(&self.pk, L)
+                ret = ydtpack_pack_bin(&self.pk, L)
                 if ret == 0:
-                    ret = msgpack_pack_raw_body(&self.pk, rawval, L)
+                    ret = ydtpack_pack_raw_body(&self.pk, rawval, L)
             elif PyUnicode_CheckExact(o) if strict_types else PyUnicode_Check(o):
                 if self.unicode_errors == NULL:
-                    ret = msgpack_pack_unicode(&self.pk, o, ITEM_LIMIT);
+                    ret = ydtpack_pack_unicode(&self.pk, o, ITEM_LIMIT);
                     if ret == -2:
                         raise ValueError("unicode string is too large")
                 else:
@@ -220,16 +220,16 @@ cdef class Packer(object):
                     L = Py_SIZE(o)
                     if L > ITEM_LIMIT:
                         raise ValueError("unicode string is too large")
-                    ret = msgpack_pack_raw(&self.pk, L)
+                    ret = ydtpack_pack_raw(&self.pk, L)
                     if ret == 0:
                         rawval = o
-                        ret = msgpack_pack_raw_body(&self.pk, rawval, L)
+                        ret = ydtpack_pack_raw_body(&self.pk, rawval, L)
             elif PyDict_CheckExact(o):
                 d = <dict>o
                 L = len(d)
                 if L > ITEM_LIMIT:
                     raise ValueError("dict is too large")
-                ret = msgpack_pack_map(&self.pk, L)
+                ret = ydtpack_pack_map(&self.pk, L)
                 if ret == 0:
                     _items = sorted(d.items()) if self.sort_keys else d.items()
                     for k, v in _items:
@@ -241,7 +241,7 @@ cdef class Packer(object):
                 L = len(o)
                 if L > ITEM_LIMIT:
                     raise ValueError("dict is too large")
-                ret = msgpack_pack_map(&self.pk, L)
+                ret = ydtpack_pack_map(&self.pk, L)
                 if ret == 0:
                     _items = sorted(o.items()) if self.sort_keys else o.items()
                     for k, v in _items:
@@ -256,17 +256,17 @@ cdef class Packer(object):
                 L = len(o.data)
                 if L > ITEM_LIMIT:
                     raise ValueError("EXT data is too large")
-                ret = msgpack_pack_ext(&self.pk, longval, L)
-                ret = msgpack_pack_raw_body(&self.pk, rawval, L)
+                ret = ydtpack_pack_ext(&self.pk, longval, L)
+                ret = ydtpack_pack_raw_body(&self.pk, rawval, L)
             elif type(o) is Timestamp:
                 llval = o.seconds
                 ulval = o.nanoseconds
-                ret = msgpack_pack_timestamp(&self.pk, llval, ulval)
+                ret = ydtpack_pack_timestamp(&self.pk, llval, ulval)
             elif PyList_CheckExact(o) if strict_types else (PyTuple_Check(o) or PyList_Check(o)):
                 L = Py_SIZE(o)
                 if L > ITEM_LIMIT:
                     raise ValueError("list is too large")
-                ret = msgpack_pack_array(&self.pk, L)
+                ret = ydtpack_pack_array(&self.pk, L)
                 if ret == 0:
                     for v in o:
                         ret = self._pack(v, nest_limit-1)
@@ -278,9 +278,9 @@ cdef class Packer(object):
                 if L > ITEM_LIMIT:
                     PyBuffer_Release(&view);
                     raise ValueError("memoryview is too large")
-                ret = msgpack_pack_bin(&self.pk, L)
+                ret = ydtpack_pack_bin(&self.pk, L)
                 if ret == 0:
-                    ret = msgpack_pack_raw_body(&self.pk, <char*>view.buf, L)
+                    ret = ydtpack_pack_raw_body(&self.pk, <char*>view.buf, L)
                 PyBuffer_Release(&view);
             elif self.datetime and PyDateTime_CheckExact(o) and datetime_tzinfo(o) is not None:
                 delta = o - epoch
@@ -288,7 +288,7 @@ cdef class Packer(object):
                     raise ValueError("failed to calculate delta")
                 llval = timedelta_days(delta) * <long long>(24*60*60) + timedelta_seconds(delta)
                 ulval = timedelta_microseconds(delta) * 1000
-                ret = msgpack_pack_timestamp(&self.pk, llval, ulval)
+                ret = ydtpack_pack_timestamp(&self.pk, llval, ulval)
             elif not default_used and self._default:
                 o = self._default(o)
                 default_used = 1
@@ -314,13 +314,13 @@ cdef class Packer(object):
             return buf
 
     def pack_ext_type(self, typecode, data):
-        msgpack_pack_ext(&self.pk, typecode, len(data))
-        msgpack_pack_raw_body(&self.pk, data, len(data))
+        ydtpack_pack_ext(&self.pk, typecode, len(data))
+        ydtpack_pack_raw_body(&self.pk, data, len(data))
 
     def pack_array_header(self, long long size):
         if size > ITEM_LIMIT:
             raise ValueError
-        cdef int ret = msgpack_pack_array(&self.pk, size)
+        cdef int ret = ydtpack_pack_array(&self.pk, size)
         if ret == -1:
             raise MemoryError
         elif ret:  # should not happen
@@ -333,7 +333,7 @@ cdef class Packer(object):
     def pack_map_header(self, long long size):
         if size > ITEM_LIMIT:
             raise ValueError
-        cdef int ret = msgpack_pack_map(&self.pk, size)
+        cdef int ret = ydtpack_pack_map(&self.pk, size)
         if ret == -1:
             raise MemoryError
         elif ret:  # should not happen
@@ -345,12 +345,12 @@ cdef class Packer(object):
 
     def pack_map_pairs(self, object pairs):
         """
-        Pack *pairs* as msgpack map type.
+        Pack *pairs* as ydtpack map type.
 
         *pairs* should be a sequence of pairs.
         (`len(pairs)` and `for k, v in pairs:` should be supported.)
         """
-        cdef int ret = msgpack_pack_map(&self.pk, len(pairs))
+        cdef int ret = ydtpack_pack_map(&self.pk, len(pairs))
         if ret == 0:
             for k, v in pairs:
                 ret = self._pack(k)

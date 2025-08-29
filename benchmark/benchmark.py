@@ -1,7 +1,7 @@
-from msgpack_sorted import fallback
+from ydtpack import fallback
 
 try:
-    from msgpack_sorted import _cmsgpack
+    from ydtpack import _cydtpack
 
     has_ext = True
 except ImportError:
@@ -17,14 +17,14 @@ def profile(name, func):
 
 def simple(name, data):
     if has_ext:
-        packer = _cmsgpack.Packer()
+        packer = _cydtpack.Packer()
         profile("packing %s (ext)" % name, lambda: packer.pack(data))
     packer = fallback.Packer()
     profile("packing %s (fallback)" % name, lambda: packer.pack(data))
 
     data = packer.pack(data)
     if has_ext:
-        profile("unpacking %s (ext)" % name, lambda: _cmsgpack.unpackb(data))
+        profile("unpacking %s (ext)" % name, lambda: _cydtpack.unpackb(data))
     profile("unpacking %s (fallback)" % name, lambda: fallback.unpackb(data))
 
 
