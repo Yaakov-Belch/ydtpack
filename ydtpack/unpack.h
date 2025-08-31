@@ -160,10 +160,18 @@ static inline int unpack_callback_array_item(unpack_user* u, unsigned int curren
 }
 
 static inline int unpack_callback_array_end(
-    unpack_user* u, PyObject* object_type, ydtpack_unpack_object* c
+    unpack_user* u, PyObject** object_type, ydtpack_unpack_object* c
 )
 {
-    if (u->list_hook) {
+    PyObject *new_c = PyObject_CallFunctionObjArgs(u->from_array, *object_type, *c, NULL);
+    if (!new_c)
+        return -1;
+    Py_DECREF(*object_type);
+    *object_type = NULL;
+    Py_DECREF(*c);
+    *c = new_c;
+
+    if (u->list_hook) { // obsolete
         PyObject *new_c = PyObject_CallFunctionObjArgs(u->list_hook, *c, NULL);
         if (!new_c)
             return -1;
@@ -219,9 +227,18 @@ static inline int unpack_callback_map_item(unpack_user* u, unsigned int current,
 }
 
 static inline int unpack_callback_map_end(
-    unpack_user* u, PyObject* object_type, ydtpack_unpack_object* c
+    unpack_user* u, PyObject** object_type, ydtpack_unpack_object* c
 ){
-    if (u->object_hook) {
+
+    PyObject *new_c = PyObject_CallFunctionObjArgs(u->from_map, *object_type, *c, NULL);
+    if (!new_c)
+        return -1;
+    Py_DECREF(*object_type);
+    *object_type = NULL;
+    Py_DECREF(*c);
+    *c = new_c;
+
+    if (u->object_hook) {  // obsolete
         PyObject *new_c = PyObject_CallFunctionObjArgs(u->object_hook, *c, NULL);
         if (!new_c)
             return -1;

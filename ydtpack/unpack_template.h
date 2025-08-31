@@ -335,7 +335,7 @@ _push:
 _check_container_end:
     c = &stack[top-1];
     if(c->count == c->size) {
-        PyObject* object_type = c->object_type;
+        PyObject** object_type = &c->object_type;
         obj = c->obj;
         if(c->ct == CT_ARRAY_ITEM) {
            if (unpack_callback_array_end(user, object_type, &obj) < 0) { goto _failed; }

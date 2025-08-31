@@ -180,6 +180,8 @@ class Unpacker:
         if unpack_ctrl is None:
             raise ValueError("No unpack_ctrl supplied.")
 
+        self.from_map   = unpack_ctrl.from_map
+        self.from_array = unpack_ctrl.from_array
         if file_like is None:
             self._feeding = True
         else:
@@ -395,16 +397,19 @@ class Unpacker:
 
         # TODO should we eliminate the recursion?
         if typ == TYPE_ARRAY:
-            ytype = self._unpack() # <= XXX
+            object_type = self._unpack() # <= XXX
             ret = newlist_hint(n)
             for i in range(n):
                 ret.append(self._unpack())
-            if self._list_hook is not None:
+            if not self._use_list:
+                ret = tuple(ret)
+            ret = self.from_array(object_type, ret)
+            if self._list_hook is not None:  # obsolete
                 ret = self._list_hook(ret)
             # TODO is the interaction between `list_hook` and `use_list` ok?
-            return ret if self._use_list else tuple(ret)
+            return ret
         if typ == TYPE_MAP:
-            ytype = self._unpack() # <= XXX
+            object_type = self._unpack() # <= XXX
             if self._object_as_pairs:
                 ret = tuple((self._unpack(), self._unpack()) for _ in range(n))
             else:
@@ -416,7 +421,8 @@ class Unpacker:
                     if type(key) is str:
                         key = sys.intern(key)
                     ret[key] = self._unpack()
-                if self._object_hook is not None:
+                ret = self.from_map(object_type, ret)
+                if self._object_hook is not None: # obsolete
                     ret = self._object_hook(ret)
             return ret
         if typ == TYPE_RAW:
