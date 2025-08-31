@@ -13,6 +13,7 @@ def test_unpack_array_header_from_file():
     f = BytesIO(packb([1, 2, 3, 4]))
     unpacker = Unpacker(f)
     assert unpacker.read_array_header() == 4
+    assert unpacker.unpack() == None
     assert unpacker.unpack() == 1
     assert unpacker.unpack() == 2
     assert unpacker.unpack() == 3

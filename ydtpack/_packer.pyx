@@ -230,6 +230,8 @@ cdef class Packer(object):
                 if L > ITEM_LIMIT:
                     raise ValueError("dict is too large")
                 ret = ydtpack_pack_map(&self.pk, L)
+                if ret != 0: return ret                 #    XXX
+                ret = self._pack(None, nest_limit-1)    # <= XXX
                 if ret == 0:
                     _items = sorted(d.items()) if self.sort_keys else d.items()
                     for k, v in _items:
@@ -242,6 +244,8 @@ cdef class Packer(object):
                 if L > ITEM_LIMIT:
                     raise ValueError("dict is too large")
                 ret = ydtpack_pack_map(&self.pk, L)
+                if ret != 0: return ret                 #    XXX
+                ret = self._pack(None, nest_limit-1)    # <= XXX
                 if ret == 0:
                     _items = sorted(o.items()) if self.sort_keys else o.items()
                     for k, v in _items:
@@ -267,8 +271,8 @@ cdef class Packer(object):
                 if L > ITEM_LIMIT:
                     raise ValueError("list is too large")
                 ret = ydtpack_pack_array(&self.pk, L)
-                # if ret != 0: return ret                 #    XXX
-                # ret = self._pack(None, nest_limit-1)    # <= XXX
+                if ret != 0: return ret                 #    XXX
+                ret = self._pack(None, nest_limit-1)    # <= XXX
                 if ret == 0:
                     for v in o:
                         ret = self._pack(v, nest_limit-1)
@@ -345,7 +349,7 @@ cdef class Packer(object):
             self.pk.length = 0
             return buf
 
-    def pack_map_pairs(self, object pairs):
+    def pack_map_pairs(self, object object_type, object pairs):
         """
         Pack *pairs* as ydtpack map type.
 
@@ -353,6 +357,8 @@ cdef class Packer(object):
         (`len(pairs)` and `for k, v in pairs:` should be supported.)
         """
         cdef int ret = ydtpack_pack_map(&self.pk, len(pairs))
+        if ret == 0:
+            ret = self._pack(object_type)
         if ret == 0:
             for k, v in pairs:
                 ret = self._pack(k)

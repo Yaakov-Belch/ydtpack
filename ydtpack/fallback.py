@@ -810,7 +810,7 @@ class Packer:
                 return
             if check(obj, dict):
                 _items = sorted(obj.items()) if self._sort_keys else obj.items()
-                return self._pack_map_pairs(len(obj), _items, nest_limit - 1)
+                return self._pack_map_pairs(len(obj), None, _items, nest_limit - 1)
 
             if self._datetime and check(obj, _DateTime) and obj.tzinfo is not None:
                 obj = Timestamp.from_datetime(obj)
@@ -838,8 +838,8 @@ class Packer:
             self._buffer = StringIO()
             return ret
 
-    def pack_map_pairs(self, pairs):
-        self._pack_map_pairs(len(pairs), pairs)
+    def pack_map_pairs(self, object_type, pairs):
+        self._pack_map_pairs(len(pairs), object_type, pairs)
         if self._autoreset:
             ret = self._buffer.getvalue()
             self._buffer = StringIO()
@@ -910,8 +910,9 @@ class Packer:
             return self._buffer.write(struct.pack(">BI", 0xDF, n))
         raise ValueError("Dict is too large")
 
-    def _pack_map_pairs(self, n, pairs, nest_limit=DEFAULT_RECURSE_LIMIT):
+    def _pack_map_pairs(self, n, object_type, pairs, nest_limit=DEFAULT_RECURSE_LIMIT):
         self._pack_map_header(n)
+        self._pack(object_type, nest_limit - 1)
         for k, v in pairs:
             self._pack(k, nest_limit - 1)
             self._pack(v, nest_limit - 1)

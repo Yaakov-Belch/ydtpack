@@ -113,6 +113,7 @@ def testArraySize(sizes=[0, 5, 50, 1000]):
     packer = Packer()
     for size in sizes:
         bio.write(packer.pack_array_header(size))
+        bio.write(packer.pack(None))
         for i in range(size):
             bio.write(packer.pack(i))
 
@@ -126,6 +127,7 @@ def test_manualreset(sizes=[0, 5, 50, 1000]):
     packer = Packer(autoreset=False)
     for size in sizes:
         packer.pack_array_header(size)
+        packer.pack(None)
         for i in range(size):
             packer.pack(i)
 
@@ -143,6 +145,7 @@ def testMapSize(sizes=[0, 5, 50, 1000]):
     packer = Packer()
     for size in sizes:
         bio.write(packer.pack_map_header(size))
+        bio.write(packer.pack(None))
         for i in range(size):
             bio.write(packer.pack(i))  # key
             bio.write(packer.pack(i * 2))  # value
@@ -167,7 +170,7 @@ def test_odict():
 def test_pairlist():
     pairlist = [(b"a", 1), (2, b"b"), (b"foo", b"bar")]
     packer = Packer()
-    packed = packer.pack_map_pairs(pairlist)
+    packed = packer.pack_map_pairs(None, pairlist)
     unpacked = unpackb(packed, object_pairs_hook=list, strict_map_key=False)
     assert pairlist == unpacked
 
