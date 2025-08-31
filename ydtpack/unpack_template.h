@@ -27,6 +27,8 @@ typedef struct unpack_stack {
     Py_ssize_t size;
     Py_ssize_t count;
     unsigned int ct;
+    unsigned int ct_next;
+    PyObject* object_type;
     PyObject* map_key;
 } unpack_stack;
 
@@ -122,15 +124,16 @@ static inline int unpack_execute(unpack_context* ctx, const char* data, Py_ssize
     cs = _cs; \
     goto _fixed_trail_again
 
-#define start_container(func, count_, ct_) \
+#define start_container(func, count_, ct_next) \
     if(top >= MSGPACK_EMBED_STACK_SIZE) { ret = -3; goto _end; } \
     if(construct_cb(func)(user, count_, &stack[top].obj) < 0) { goto _failed; } \
     if((count_) == 0) { obj = stack[top].obj; \
         if (construct_cb(func##_end)(user, &obj) < 0) { goto _failed; } \
         goto _push; } \
-    stack[top].ct = ct_; \
+    stack[top].ct    = ct_next; \
     stack[top].size  = count_; \
     stack[top].count = 0; \
+    stack[top].object_type = stack[top].map_key = NULL; \
     ++top; \
     goto _header_again
 

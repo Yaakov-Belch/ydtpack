@@ -82,9 +82,10 @@ typedef enum {
 
 
 typedef enum {
-    CT_ARRAY_ITEM,
+    CT_CONTAINER_TYPE,
     CT_MAP_KEY,
     CT_MAP_VALUE,
+    CT_ARRAY_ITEM,
 } ydtpack_container_type;
 
 
