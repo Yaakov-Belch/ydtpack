@@ -61,11 +61,11 @@ typedef enum {
     CS_INT_32            = 0x12,
     CS_INT_64            = 0x13,
 
-    //CS_FIXEXT1           = 0x14,
-    //CS_FIXEXT2           = 0x15,
-    //CS_FIXEXT4           = 0x16,
-    //CS_FIXEXT8           = 0x17,
-    //CS_FIXEXT16          = 0x18,
+    //CS_FIXEXT1         = 0x14,  // removed
+    //CS_FIXEXT2         = 0x15,  // removed
+    //CS_FIXEXT4         = 0x16,  // removed
+    //CS_FIXEXT8         = 0x17,  // removed
+    //CS_FIXEXT16        = 0x18,  // removed
 
     CS_RAW_8             = 0x19,
     CS_RAW_16            = 0x1a,
