@@ -22,7 +22,7 @@
 typedef struct unpack_user {
     bool use_list;
     bool raw;
-    bool has_pairs_hook;
+    bool object_as_pairs;
     bool strict_map_key;
     PyObject *object_hook;
     PyObject *list_hook;
@@ -178,7 +178,7 @@ static inline int unpack_callback_map(unpack_user* u, unsigned int n, ydtpack_un
         return -1;
     }
     PyObject *p;
-    if (u->has_pairs_hook) {
+    if (u->object_as_pairs) {
         p = PyTuple_New(n); // Or use tuple?
     }
     else {
@@ -199,7 +199,7 @@ static inline int unpack_callback_map_item(unpack_user* u, unsigned int current,
     if (PyUnicode_CheckExact(k)) {
         PyUnicode_InternInPlace(&k);
     }
-    if (u->has_pairs_hook) {
+    if (u->object_as_pairs) {
         ydtpack_unpack_object item = PyTuple_Pack(2, k, v);
         if (!item)
             return -1;

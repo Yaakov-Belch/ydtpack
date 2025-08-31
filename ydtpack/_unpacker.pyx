@@ -23,7 +23,7 @@ cdef extern from "unpack.h":
     ctypedef struct ydtpack_user:
         bint use_list
         bint raw
-        bint has_pairs_hook # call object_hook with k-v pairs
+        bint object_as_pairs
         bint strict_map_key
         PyObject* object_hook
         PyObject* list_hook
@@ -79,7 +79,7 @@ cdef inline init_ctx(unpack_context *ctx,
             raise TypeError("object_hook must be a callable.")
         ctx.user.object_hook = <PyObject*>object_hook
 
-    ctx.user.has_pairs_hook = object_as_pairs
+    ctx.user.object_as_pairs = object_as_pairs
 
     if list_hook is not None:
         if not PyCallable_Check(list_hook):
