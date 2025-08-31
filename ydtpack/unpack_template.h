@@ -463,7 +463,6 @@ static inline int unpack_container_header(unpack_context* ctx, const char* data,
 #undef SWITCH_RANGE_END
 
 static const execute_fn unpack_construct = &unpack_execute<true>;
-static const execute_fn unpack_skip = &unpack_execute<false>;
 static const execute_fn read_array_header = &unpack_container_header<0x90, 0xdc>;
 static const execute_fn read_map_header = &unpack_container_header<0x80, 0xde>;
 

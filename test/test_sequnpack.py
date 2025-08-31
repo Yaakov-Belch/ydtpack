@@ -49,19 +49,6 @@ def test_foobar():
     assert k == len(b"foobar")
 
 
-def test_foobar_skip():
-    unpacker = Unpacker(read_size=3, use_list=1)
-    unpacker.feed(b"foobar")
-    assert unpacker.unpack() == ord(b"f")
-    unpacker.skip()
-    assert unpacker.unpack() == ord(b"o")
-    unpacker.skip()
-    assert unpacker.unpack() == ord(b"a")
-    unpacker.skip()
-    with raises(OutOfData):
-        unpacker.unpack()
-
-
 def test_maxbuffersize():
     with raises(ValueError):
         Unpacker(read_size=5, max_buffer_size=3)

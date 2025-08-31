@@ -45,7 +45,6 @@ from .exceptions import BufferFull, OutOfData, ExtraData, FormatError, StackErro
 from .ext import ExtType, Timestamp
 
 
-EX_SKIP = 0
 EX_CONSTRUCT = 1
 EX_READ_ARRAY_HEADER = 2
 EX_READ_MAP_HEADER = 3
@@ -501,12 +500,6 @@ class Unpacker:
             return n
         # TODO should we eliminate the recursion?
         if typ == TYPE_ARRAY:
-            if execute == EX_SKIP:
-                self._unpack(EX_SKIP)  # <= XXX
-                for i in range(n):
-                    # TODO check whether we need to call `list_hook`
-                    self._unpack(EX_SKIP)
-                return
             ytype = self._unpack(EX_CONSTRUCT) # <= XXX
             ret = newlist_hint(n)
             for i in range(n):
@@ -516,13 +509,6 @@ class Unpacker:
             # TODO is the interaction between `list_hook` and `use_list` ok?
             return ret if self._use_list else tuple(ret)
         if typ == TYPE_MAP:
-            if execute == EX_SKIP:
-                self._unpack(EX_SKIP)  # <= XXX
-                for i in range(n):
-                    # TODO check whether we need to call hooks
-                    self._unpack(EX_SKIP)
-                    self._unpack(EX_SKIP)
-                return
             ytype = self._unpack(EX_CONSTRUCT) # <= XXX
             if self._object_pairs_hook is not None:
                 ret = self._object_pairs_hook(
@@ -540,8 +526,6 @@ class Unpacker:
                 if self._object_hook is not None:
                     ret = self._object_hook(ret)
             return ret
-        if execute == EX_SKIP:
-            return
         if typ == TYPE_RAW:
             if self._raw:
                 obj = bytes(obj)
@@ -581,10 +565,6 @@ class Unpacker:
             raise StackError
 
     next = __next__
-
-    def skip(self):
-        self._unpack(EX_SKIP)
-        self._consume()
 
     def unpack(self):
         try:

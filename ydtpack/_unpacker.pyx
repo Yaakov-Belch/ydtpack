@@ -50,7 +50,6 @@ cdef extern from "unpack.h":
     ctypedef int (*execute_fn)(unpack_context* ctx, const char* data,
                                Py_ssize_t len, Py_ssize_t* off) except? -1
     execute_fn unpack_construct
-    execute_fn unpack_skip
     execute_fn read_array_header
     execute_fn read_map_header
     void unpack_init(unpack_context* ctx)
@@ -502,13 +501,6 @@ cdef class Unpacker(object):
         Raises `OutOfData` when there are no more bytes to unpack.
         """
         return self._unpack(unpack_construct)
-
-    def skip(self):
-        """Read and ignore one object, returning None
-
-        Raises `OutOfData` when there are no more bytes to unpack.
-        """
-        return self._unpack(unpack_skip)
 
     def read_array_header(self):
         """assuming the next object is an array, return its size n, such that
