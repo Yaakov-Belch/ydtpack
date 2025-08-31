@@ -3,7 +3,6 @@ from datetime import datetime as _DateTime
 import sys
 import struct
 
-
 if hasattr(sys, "pypy_version_info"):
     # StringIO is slow on PyPy, StringIO is faster.  However: PyPy's own
     # StringBuilder is fastest.
