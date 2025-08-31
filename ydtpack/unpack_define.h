@@ -46,9 +46,9 @@ typedef enum {
     CS_BIN_16            = 0x05,
     CS_BIN_32            = 0x06,
 
-    CS_EXT_8             = 0x07,
-    CS_EXT_16            = 0x08,
-    CS_EXT_32            = 0x09,
+    CS_EXT_8             = 0x07,  // removed
+    CS_EXT_16            = 0x08,  // removed
+    CS_EXT_32            = 0x09,  // removed
 
     CS_FLOAT             = 0x0a,
     CS_DOUBLE            = 0x0b,

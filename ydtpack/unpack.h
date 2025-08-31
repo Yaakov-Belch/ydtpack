@@ -32,7 +32,7 @@ typedef struct unpack_user {
 
     PyObject *giga;
     const char *unicode_errors;
-    Py_ssize_t max_str_len, max_bin_len, max_array_len, max_map_len, max_ext_len;
+    Py_ssize_t max_str_len, max_bin_len, max_array_len, max_map_len;
 } unpack_user;
 
 typedef PyObject* ydtpack_unpack_object;

@@ -37,8 +37,6 @@ cdef extern from "unpack.h":
         Py_ssize_t max_bin_len
         Py_ssize_t max_array_len
         Py_ssize_t max_map_len
-        Py_ssize_t max_ext_len
-
 
     ctypedef struct unpack_context:
         ydtpack_user user
@@ -59,8 +57,7 @@ cdef inline init_ctx(unpack_context *ctx,
                      bint strict_map_key,
                      const char* unicode_errors,
                      Py_ssize_t max_str_len, Py_ssize_t max_bin_len,
-                     Py_ssize_t max_array_len, Py_ssize_t max_map_len,
-                     Py_ssize_t max_ext_len):
+                     Py_ssize_t max_array_len, Py_ssize_t max_map_len):
     unpack_init(ctx)
     ctx.user.use_list = use_list
     ctx.user.raw = raw
@@ -76,7 +73,6 @@ cdef inline init_ctx(unpack_context *ctx,
     ctx.user.max_bin_len = max_bin_len
     ctx.user.max_array_len = max_array_len
     ctx.user.max_map_len = max_map_len
-    ctx.user.max_ext_len = max_ext_len
 
     if object_hook is not None and object_pairs_hook is not None:
         raise TypeError("object_pairs_hook and object_hook are mutually exclusive.")
@@ -101,9 +97,6 @@ cdef inline init_ctx(unpack_context *ctx,
 
     ctx.user.giga = <PyObject*>giga
     ctx.user.unicode_errors = unicode_errors
-
-def default_read_extended_type(typecode, data):
-    raise NotImplementedError("Cannot decode extended type with typecode=%d" % typecode)
 
 cdef inline int get_data_from_buffer(object obj,
                                      Py_buffer *view,
@@ -138,8 +131,7 @@ def unpackb(object packed, *,
             Py_ssize_t max_str_len=-1,
             Py_ssize_t max_bin_len=-1,
             Py_ssize_t max_array_len=-1,
-            Py_ssize_t max_map_len=-1,
-            Py_ssize_t max_ext_len=-1):
+            Py_ssize_t max_map_len=-1):
     """
     Unpack packed_bytes to object. Returns an unpacked object.
 
@@ -178,13 +170,11 @@ def unpackb(object packed, *,
         max_array_len = buf_len
     if max_map_len == -1:
         max_map_len = buf_len//2
-    if max_ext_len == -1:
-        max_ext_len = buf_len
 
     try:
         init_ctx(&ctx, object_hook, object_pairs_hook, list_hook,
                  use_list, raw, strict_map_key, cerr,
-                 max_str_len, max_bin_len, max_array_len, max_map_len, max_ext_len)
+                 max_str_len, max_bin_len, max_array_len, max_map_len)
         ret = unpack_construct(&ctx, buf, buf_len, &off)
     finally:
         PyBuffer_Release(&view);
@@ -267,10 +257,6 @@ cdef class Unpacker(object):
         Limits max length of map.
         (default: max_buffer_size//2)
 
-    :param int max_ext_len:
-        Deprecated, use *max_buffer_size* instead.
-        Limits max size of ext type.  (default: max_buffer_size)
-
     Example of streaming deserialize from file-like object::
 
         unpacker = Unpacker(file_like)
@@ -322,8 +308,7 @@ cdef class Unpacker(object):
                  Py_ssize_t max_str_len=-1,
                  Py_ssize_t max_bin_len=-1,
                  Py_ssize_t max_array_len=-1,
-                 Py_ssize_t max_map_len=-1,
-                 Py_ssize_t max_ext_len=-1):
+                 Py_ssize_t max_map_len=-1):
         cdef const char *cerr=NULL
 
         if unpack_ctrl is None:
@@ -349,8 +334,6 @@ cdef class Unpacker(object):
             max_array_len = max_buffer_size
         if max_map_len == -1:
             max_map_len = max_buffer_size//2
-        if max_ext_len == -1:
-            max_ext_len = max_buffer_size
 
         if read_size > max_buffer_size:
             raise ValueError("read_size should be less or equal to max_buffer_size")
@@ -374,7 +357,7 @@ cdef class Unpacker(object):
         init_ctx(&self.ctx, object_hook, object_pairs_hook, list_hook,
                  use_list, raw, strict_map_key, cerr,
                  max_str_len, max_bin_len, max_array_len,
-                 max_map_len, max_ext_len)
+                 max_map_len)
 
     def feed(self, object next_bytes):
         """Append `next_bytes` to internal buffer."""

@@ -32,7 +32,6 @@ cdef extern from "pack.h":
     int ydtpack_pack_raw(ydtpack_packer* pk, size_t l)
     int ydtpack_pack_bin(ydtpack_packer* pk, size_t l)
     int ydtpack_pack_raw_body(ydtpack_packer* pk, char* body, size_t l)
-    int ydtpack_pack_ext(ydtpack_packer* pk, char typecode, size_t l)
     int ydtpack_pack_unicode(ydtpack_packer* pk, object o, long long limit)
 
 cdef extern from "buff_converter.h":
