@@ -28,8 +28,8 @@ cdef extern from "unpack.h":
         PyObject* object_hook
         PyObject* list_hook
 
-        # PyObject* from_map;     # obsolete
-        # PyObject* from_array;   # obsolete
+        PyObject* from_map;
+        PyObject* from_array;
 
         PyObject *giga;
         char *unicode_errors
@@ -51,6 +51,7 @@ cdef extern from "unpack.h":
     void unpack_clear(unpack_context* ctx)
 
 cdef inline init_ctx(unpack_context *ctx,
+                     object from_map, object from_array,
                      object object_hook, bint object_as_pairs,
                      object list_hook,
                      bint use_list, bint raw,
@@ -64,10 +65,8 @@ cdef inline init_ctx(unpack_context *ctx,
     ctx.user.strict_map_key = strict_map_key
     ctx.user.object_hook = ctx.user.list_hook = <PyObject*>NULL
 
-    # Py_INCREF(unpack_ctrl.from_map)                           # obsolete
-    # ctx.user.from_map   = <PyObject*>unpack_ctrl.from_map     # obsolete
-    # Py_INCREF(unpack_ctrl.from_array)                         # obsolete
-    # ctx.user.from_array = <PyObject*>unpack_ctrl.from_array   # obsolete
+    ctx.user.from_map   = <PyObject*>from_map
+    ctx.user.from_array = <PyObject*>from_array
 
     ctx.user.max_str_len = max_str_len
     ctx.user.max_bin_len = max_bin_len
@@ -149,6 +148,9 @@ def unpackb(object packed, *,
     if unpack_ctrl is None:
         raise(ValueError("No unpack_ctrl supplied."))
 
+    cdef from_map   = unpack_ctrl.from_map
+    cdef from_array = unpack_ctrl.from_array
+
     o = unpack_ctrl.options
     if o.unicode_errors is not None:
         cerr = o.unicode_errors
@@ -156,7 +158,7 @@ def unpackb(object packed, *,
     get_data_from_buffer(packed, &view, &buf, &buf_len)
 
     try:
-        init_ctx(&ctx, object_hook, o.object_as_pairs, list_hook,
+        init_ctx(&ctx, from_map, from_array, object_hook, o.object_as_pairs, list_hook,
                  o.use_list, o.raw, o.strict_map_key, cerr,
                  min(buf_len, o.max_str_len),
                  min(buf_len, o.max_bin_len),
@@ -233,6 +235,8 @@ cdef class Unpacker(object):
     cdef object file_like_read
     cdef Py_ssize_t read_size
     # To maintain refcnt.
+    cdef object from_map
+    cdef object from_array
     cdef object object_hook
     cdef object list_hook
     cdef bint object_as_pairs
@@ -265,8 +269,10 @@ cdef class Unpacker(object):
         if unpack_ctrl is None:
            raise(ValueError("No unpack_ctrl supplied."))
 
-        self.object_hook = object_hook
-        self.list_hook   = list_hook
+        self.from_map   = unpack_ctrl.from_map
+        self.from_array = unpack_ctrl.from_array
+        self.object_hook = object_hook            # obsolete
+        self.list_hook   = list_hook              # obsolete
 
         self.file_like = file_like
         if file_like:
@@ -292,7 +298,9 @@ cdef class Unpacker(object):
         if o.unicode_errors is not None:
             cerr = self.unicode_errors = o.unicode_errors
 
-        init_ctx(&self.ctx, object_hook, o.object_as_pairs, list_hook,
+        init_ctx(&self.ctx,
+                 self.from_map, self.from_array,
+                 object_hook, o.object_as_pairs, list_hook,
                  o.use_list, o.raw, o.strict_map_key, <const char*>cerr,
                  o.max_str_len, o.max_bin_len, o.max_array_len, o.max_map_len)
 

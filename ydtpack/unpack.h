@@ -27,8 +27,8 @@ typedef struct unpack_user {
     PyObject *object_hook;
     PyObject *list_hook;
 
-    // PyObject* from_map;     # obsolete
-    // PyObject* from_array;   # obsolete
+    PyObject* from_map;
+    PyObject* from_array;
 
     PyObject *giga;
     const char *unicode_errors;
