@@ -43,11 +43,11 @@ def test_max_str_len():
     d = "x" * 3
     packed = packb(d, pack_ctrl=pctrl())
 
-    unpacker = Unpacker(unpack_ctrl=uctrl(), max_str_len=3, raw=False)
+    unpacker = Unpacker(unpack_ctrl=uctrl( max_str_len=3, raw=False))
     unpacker.feed(packed)
     assert unpacker.unpack() == d
 
-    unpacker = Unpacker(unpack_ctrl=uctrl(), max_str_len=2, raw=False)
+    unpacker = Unpacker(unpack_ctrl=uctrl(max_str_len=2, raw=False))
     with pytest.raises(UnpackValueError):
         unpacker.feed(packed)
         unpacker.unpack()
@@ -55,13 +55,13 @@ def test_max_str_len():
 
 def test_max_bin_len():
     d = b"x" * 3
-    packed = packb(d, pack_ctrl=pctrl(), use_bin_type=True)
+    packed = packb(d, pack_ctrl=pctrl(use_bin_type=True))
 
-    unpacker = Unpacker(unpack_ctrl=uctrl(), max_bin_len=3)
+    unpacker = Unpacker(unpack_ctrl=uctrl(max_bin_len=3))
     unpacker.feed(packed)
     assert unpacker.unpack() == d
 
-    unpacker = Unpacker(unpack_ctrl=uctrl(), max_bin_len=2)
+    unpacker = Unpacker(unpack_ctrl=uctrl(max_bin_len=2))
     with pytest.raises(UnpackValueError):
         unpacker.feed(packed)
         unpacker.unpack()
@@ -71,11 +71,11 @@ def test_max_array_len():
     d = [1, 2, 3]
     packed = packb(d, pack_ctrl=pctrl())
 
-    unpacker = Unpacker(unpack_ctrl=uctrl(), max_array_len=3)
+    unpacker = Unpacker(unpack_ctrl=uctrl(max_array_len=3))
     unpacker.feed(packed)
     assert unpacker.unpack() == d
 
-    unpacker = Unpacker(unpack_ctrl=uctrl(), max_array_len=2)
+    unpacker = Unpacker(unpack_ctrl=uctrl(max_array_len=2))
     with pytest.raises(UnpackValueError):
         unpacker.feed(packed)
         unpacker.unpack()
@@ -85,11 +85,11 @@ def test_max_map_len():
     d = {1: 2, 3: 4, 5: 6}
     packed = packb(d, pack_ctrl=pctrl())
 
-    unpacker = Unpacker(unpack_ctrl=uctrl(), max_map_len=3, strict_map_key=False)
+    unpacker = Unpacker(unpack_ctrl=uctrl(max_map_len=3, strict_map_key=False))
     unpacker.feed(packed)
     assert unpacker.unpack() == d
 
-    unpacker = Unpacker(unpack_ctrl=uctrl(), max_map_len=2, strict_map_key=False)
+    unpacker = Unpacker(unpack_ctrl=uctrl(max_map_len=2, strict_map_key=False))
     with pytest.raises(UnpackValueError):
         unpacker.feed(packed)
         unpacker.unpack()
@@ -131,9 +131,9 @@ def test_max_map_len():
 def test_auto_max_array_len():
     packed = b"\xde\x00\x06zz"
     with pytest.raises(UnpackValueError):
-        unpackb(packed, unpack_ctrl=uctrl(), raw=False)
+        unpackb(packed, unpack_ctrl=uctrl(raw=False))
 
-    unpacker = Unpacker(unpack_ctrl=uctrl(), max_buffer_size=5, raw=False)
+    unpacker = Unpacker(unpack_ctrl=uctrl(max_buffer_size=5, raw=False))
     unpacker.feed(packed)
     with pytest.raises(UnpackValueError):
         unpacker.unpack()
@@ -143,9 +143,9 @@ def test_auto_max_map_len():
     # len(packed) == 6 -> max_map_len == 3
     packed = b"\xde\x00\x04zzz"
     with pytest.raises(UnpackValueError):
-        unpackb(packed, unpack_ctrl=uctrl(), raw=False)
+        unpackb(packed, unpack_ctrl=uctrl(raw=False))
 
-    unpacker = Unpacker(unpack_ctrl=uctrl(), max_buffer_size=6, raw=False)
+    unpacker = Unpacker(unpack_ctrl=uctrl(max_buffer_size=6, raw=False))
     unpacker.feed(packed)
     with pytest.raises(UnpackValueError):
         unpacker.unpack()

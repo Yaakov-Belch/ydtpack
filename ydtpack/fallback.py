@@ -63,7 +63,7 @@ def _get_data_from_buffer(obj):
     return view
 
 
-def unpackb(packed, **kwargs):
+def unpackb(packed, *, unpack_ctrl, **kwargs): # kwargs are obsolete hooks
     """
     Unpack an object from `packed`.
 
@@ -75,7 +75,9 @@ def unpackb(packed, **kwargs):
 
     See :class:`Unpacker` for options.
     """
-    unpacker = Unpacker(None, max_buffer_size=len(packed), **kwargs)
+    unpacker = Unpacker(
+        None, unpack_ctrl=unpack_ctrl, buffer_size=len(packed), **kwargs,
+    )
     unpacker.feed(packed)
     try:
         ret = unpacker._unpack()
@@ -133,54 +135,15 @@ class Unpacker:
         File-like object having `.read(n)` method.
         If specified, unpacker reads serialized data from it and :meth:`feed()` is not usable.
 
-    :param int read_size:
-        Used as `file_like.read(read_size)`. (default: `min(16*1024, max_buffer_size)`)
-
-    :param bool use_list:
-        If true, unpack ydtpack array to Python list.
-        Otherwise, unpack to Python tuple. (default: True)
-
-    :param bool raw:
-        If true, unpack ydtpack raw to Python bytes.
-        Otherwise, unpack to Python str by decoding with UTF-8 encoding (default).
-
-    :param bool strict_map_key:
-        If true (default), only str or bytes are accepted for map (dict) keys.
+    :param buffer_size:
+        Set the buffer_size.
 
     :param callable object_hook:
         When specified, it should be callable.
         Unpacker calls it with a dict argument after unpacking ydtpack map.
 
-    :param callable object_as_pairs:
-        If true, handles maps as tuples of pairs.
-        Otherwise, as dicts (default).
-
-    :param str unicode_errors:
-        The error handler for decoding unicode. (default: 'strict')
-        This option should be used only when you have ydtpack data which
-        contains invalid UTF-8 string.
-
-    :param int max_buffer_size:
-        Limits size of data waiting unpacked.  0 means 2**32-1.
-        The default value is 100*1024*1024 (100MiB).
-        Raises `BufferFull` exception when it is insufficient.
-        You should set this parameter when unpacking data from untrusted source.
-
-    :param int max_str_len:
-        Deprecated, use *max_buffer_size* instead.
-        Limits max length of str. (default: max_buffer_size)
-
-    :param int max_bin_len:
-        Deprecated, use *max_buffer_size* instead.
-        Limits max length of bin. (default: max_buffer_size)
-
-    :param int max_array_len:
-        Limits max length of array.
-        (default: max_buffer_size)
-
-    :param int max_map_len:
-        Limits max length of map.
-        (default: max_buffer_size//2)
+    :param callable list_hook:
+        This will be removed soon.  obsolete
 
     Example of streaming deserialize from file-like object::
 
@@ -210,25 +173,12 @@ class Unpacker:
         self,
         file_like=None,
         unpack_ctrl=None,
-        read_size=0,
-        use_list=True,
-        raw=False,
-        strict_map_key=True,
+        buffer_size=0,
         object_hook=None,
-        object_as_pairs=False,
         list_hook=None,
-        unicode_errors=None,
-        max_buffer_size=100 * 1024 * 1024,
-        max_str_len=-1,
-        max_bin_len=-1,
-        max_array_len=-1,
-        max_map_len=-1,
     ):
         if unpack_ctrl is None:
             raise ValueError("No unpack_ctrl supplied.")
-
-        if unicode_errors is None:
-            unicode_errors = "strict"
 
         if file_like is None:
             self._feeding = True
@@ -252,32 +202,27 @@ class Unpacker:
         # state, which _buf_checkpoint records.
         self._buf_checkpoint = 0
 
-        if not max_buffer_size:
-            max_buffer_size = 2**31 - 1
-        if max_str_len == -1:
-            max_str_len = max_buffer_size
-        if max_bin_len == -1:
-            max_bin_len = max_buffer_size
-        if max_array_len == -1:
-            max_array_len = max_buffer_size
-        if max_map_len == -1:
-            max_map_len = max_buffer_size // 2
+        o = unpack_ctrl.options
+        if buffer_size == 0:
+            self._max_buffer_size = o.max_buffer_size
+            self._read_size       = o.read_size
+        else:
+            self._max_buffer_size = self._read_size = buffer_size
 
-        self._max_buffer_size = max_buffer_size
-        if read_size > self._max_buffer_size:
-            raise ValueError("read_size must be smaller than max_buffer_size")
-        self._read_size = read_size or min(self._max_buffer_size, 16 * 1024)
-        self._raw = bool(raw)
-        self._strict_map_key = bool(strict_map_key)
-        self._unicode_errors = unicode_errors
-        self._use_list = use_list
+        self._read_size = o.read_size
+        self._raw = bool(o.raw)
+        self._strict_map_key = bool(o.strict_map_key)
+        self._unicode_errors = o.unicode_errors
+        self._use_list = o.use_list
+        self._object_as_pairs = o.object_as_pairs
+        self._max_str_len   = o.max_str_len
+        self._max_bin_len   = o.max_bin_len
+        self._max_array_len = o.max_array_len
+        self._max_map_len   = o.max_map_len
+
         self._list_hook = list_hook
         self._object_hook = object_hook
-        self._object_as_pairs = object_as_pairs
-        self._max_str_len = max_str_len
-        self._max_bin_len = max_bin_len
-        self._max_array_len = max_array_len
-        self._max_map_len = max_map_len
+
         self._stream_offset = 0
 
         if list_hook is not None and not callable(list_hook):
@@ -532,28 +477,6 @@ class Packer:
         Convert user type to builtin type that Packer supports.
         See also simplejson's document.
 
-    :param bool use_single_float:
-        Use single precision float type for float. (default: False)
-
-    :param bool use_bin_type:
-        Use bin type introduced in ydtpack spec 2.0 for bytes.
-        It also enables str8 type for unicode. (default: True)
-
-    :param bool strict_types:
-        If set to true, types will be checked to be exact. Derived classes
-        from serializable types will not be serialized and will be
-        treated as unsupported type and forwarded to default.
-        Additionally tuples will not be serialized as lists.
-        This is useful when trying to implement accurate serialization
-        for python types.
-
-    :param str unicode_errors:
-        The error handler for encoding unicode. (default: 'strict')
-        DO NOT USE THIS!!  This option is kept for very specific usage.
-
-    :param bool sort_keys:
-        Sort output dictionaries by key. (default: False)
-
     Example of streaming deserialize from file-like object::
 
         unpacker = Unpacker(file_like)
@@ -582,20 +505,18 @@ class Packer:
         self,
         pack_ctrl=None,
         default=None,
-        use_single_float=False,
-        use_bin_type=True,
-        strict_types=False,
-        unicode_errors=None,
-        sort_keys=False,
     ):
         if pack_ctrl is None:
            raise(ValueError("No pack_ctrl supplied."))
-        self._strict_types = strict_types
-        self._use_float = use_single_float
-        self._use_bin_type = use_bin_type
+
+        o = pack_ctrl.options
+        self._strict_types = o.strict_types
+        self._use_float = o.use_single_float
+        self._use_bin_type = o.use_bin_type
         self._buffer = StringIO()
-        self._unicode_errors = unicode_errors or "strict"
-        self._sort_keys = sort_keys
+        self._unicode_errors = o.unicode_errors
+        self._sort_keys = o.sort_keys
+
         if default is not None:
             if not callable(default):
                 raise TypeError("default must be callable")

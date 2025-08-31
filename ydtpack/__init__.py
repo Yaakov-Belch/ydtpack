@@ -94,7 +94,8 @@ class UnpackConfig:
                  object_as_pairs=False, unicode_errors='strict', max_buffer_size=0,
                  max_str_len=-1, max_bin_len=-1, max_array_len=-1, max_map_len=-1):
         if max_buffer_size == 0: max_buffer_size = 2**32-1
-        self.read_size = min(read_size, max_buffer_size)
+        self.max_buffer_size = max_buffer_size
+        self.read_size       = min(read_size, max_buffer_size)
 
         if max_str_len == -1:   max_str_len   = max_buffer_size
         if max_bin_len == -1:   max_bin_len   = max_buffer_size
@@ -106,6 +107,11 @@ class UnpackConfig:
         self.max_array_len = max_array_len
         self.max_map_len   = max_map_len
 
+        self.use_list        = use_list
+        self.raw             = raw
+        self.strict_map_key  = strict_map_key
+        self.object_as_pairs = object_as_pairs
+        self.unicode_errors  = unicode_errors
 
 if os.environ.get("YDTPACK_PUREPYTHON"):
     from .fallback import Packer, unpackb, Unpacker
@@ -116,17 +122,17 @@ else:
         from .fallback import Packer, unpackb, Unpacker
 
 
-def pack(o, stream, pack_ctrl, **kwargs):
+def pack(o, stream, pack_ctrl, **kwargs):  # kwargs are obsolete hooks
     """
     Pack object `o` and write it to `stream`
 
     See :class:`Packer` for options.
     """
-    packer = Packer(pack_ctrl=pack_ctrl, **kwargs)
+    packer = Packer(pack_ctrl=pack_ctrl, **kwargs) # kwargs obsolete
     stream.write(packer.pack(o))
 
 
-def packb(o, pack_ctrl, **kwargs):
+def packb(o, pack_ctrl, **kwargs): # kwargs are obsolete hooks
     """
     Pack object `o` and return packed bytes
 

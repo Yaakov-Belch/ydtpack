@@ -67,28 +67,6 @@ cdef class Packer(object):
     :param callable default:
         Convert user type to builtin type that Packer supports.
         See also simplejson's document.
-
-    :param bool use_single_float:
-        Use single precision float type for float. (default: False)
-
-    :param bool use_bin_type:
-        Use bin type introduced in ydtpack spec 2.0 for bytes.
-        It also enables str8 type for unicode. (default: True)
-
-    :param bool strict_types:
-        If set to true, types will be checked to be exact. Derived classes
-        from serializeable types will not be serialized and will be
-        treated as unsupported type and forwarded to default.
-        Additionally tuples will not be serialized as lists.
-        This is useful when trying to implement accurate serialization
-        for python types.
-
-    :param str unicode_errors:
-        The error handler for encoding unicode. (default: 'strict')
-        DO NOT USE THIS!!  This option is kept for very specific usage.
-
-    :param bool sort_keys:
-        Sort output dictionaries by key. (default: False)
     """
     cdef ydtpack_packer pk
     cdef object _default
@@ -106,30 +84,27 @@ cdef class Packer(object):
         self.pk.buf_size = buf_size
         self.pk.length = 0
 
-    def __init__(self, *,
-                 object pack_ctrl, default=None,
-                 bint use_single_float=False, bint use_bin_type=True,
-                 bint strict_types=False, unicode_errors=None,
-                 bool sort_keys=False):
-
+    def __init__(self, *, object pack_ctrl, default=None):
         if pack_ctrl is None:
            raise(ValueError("No pack_ctrl supplied."))
 
-        self.use_float = use_single_float
-        self.strict_types = strict_types
-        self.pk.use_bin_type = use_bin_type
+        o = pack_ctrl.options
+
+        self.use_float = o.use_single_float
+        self.strict_types = o.strict_types
+        self.pk.use_bin_type = o.use_bin_type
         if default is not None:
             if not PyCallable_Check(default):
                 raise TypeError("default must be a callable.")
         self._default = default
 
-        self._berrors = unicode_errors
-        if unicode_errors is None:
+        self._berrors = o.unicode_errors
+        if o.unicode_errors is None:
             self.unicode_errors = NULL
         else:
             self.unicode_errors = self._berrors
 
-        self.sort_keys = sort_keys
+        self.sort_keys = o.sort_keys
 
     def __dealloc__(self):
         PyMem_Free(self.pk.buf)

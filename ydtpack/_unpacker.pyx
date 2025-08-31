@@ -116,13 +116,14 @@ cdef inline int get_data_from_buffer(object obj,
 def unpackb(object packed, *,
             object unpack_ctrl=None,
             object object_hook=None, object list_hook=None,
-            bint use_list=True, bint raw=False, bint strict_map_key=True,
-            unicode_errors=None,
-            object_as_pairs=False,
-            Py_ssize_t max_str_len=-1,
-            Py_ssize_t max_bin_len=-1,
-            Py_ssize_t max_array_len=-1,
-            Py_ssize_t max_map_len=-1):
+            #bint use_list=True, bint raw=False, bint strict_map_key=True, # obsolete...
+            #unicode_errors=None,
+            #object_as_pairs=False,
+            #Py_ssize_t max_str_len=-1,
+            #Py_ssize_t max_bin_len=-1,
+            #Py_ssize_t max_array_len=-1,
+            #Py_ssize_t max_map_len=-1
+            ):
     """
     Unpack packed_bytes to object. Returns an unpacked object.
 
@@ -148,24 +149,19 @@ def unpackb(object packed, *,
     if unpack_ctrl is None:
         raise(ValueError("No unpack_ctrl supplied."))
 
-    if unicode_errors is not None:
-        cerr = unicode_errors
+    o = unpack_ctrl.options
+    if o.unicode_errors is not None:
+        cerr = o.unicode_errors
 
     get_data_from_buffer(packed, &view, &buf, &buf_len)
 
-    if max_str_len == -1:
-        max_str_len = buf_len
-    if max_bin_len == -1:
-        max_bin_len = buf_len
-    if max_array_len == -1:
-        max_array_len = buf_len
-    if max_map_len == -1:
-        max_map_len = buf_len//2
-
     try:
-        init_ctx(&ctx, object_hook, object_as_pairs, list_hook,
-                 use_list, raw, strict_map_key, cerr,
-                 max_str_len, max_bin_len, max_array_len, max_map_len)
+        init_ctx(&ctx, object_hook, o.object_as_pairs, list_hook,
+                 o.use_list, o.raw, o.strict_map_key, cerr,
+                 min(buf_len, o.max_str_len),
+                 min(buf_len, o.max_bin_len),
+                 min(buf_len, o.max_array_len),
+                 min(buf_len, o.max_map_len))
         ret = unpack_construct(&ctx, buf, buf_len, &off)
     finally:
         PyBuffer_Release(&view);
@@ -197,54 +193,15 @@ cdef class Unpacker(object):
     :param unpack_ctrl:
         Unpack control context.
 
-    :param int read_size:
-        Used as `file_like.read(read_size)`. (default: `min(16*1024, max_buffer_size)`)
-
-    :param bool use_list:
-        If true, unpack ydtpack array to Python list.
-        Otherwise, unpack to Python tuple. (default: True)
-
-    :param bool raw:
-        If true, unpack ydtpack strings (raw) to Python bytes.
-        Otherwise, unpack to Python str by decoding with UTF-8 encoding (default).
-
-    :param bool strict_map_key:
-        If true (default), only str or bytes are accepted for map (dict) keys.
+    :param buffer_size:
+        Set the buffer_size directly.
 
     :param callable object_hook:
-        When specified, it should be callable.
+        When specified, it should be callable. obsolete.
         Unpacker calls it with a dict argument after unpacking ydtpack map.
 
-    :param callable object_as_pairs:
-        If true, handles maps as tuples of pairs.
-        Otherwise, as dicts (default).
-
-    :param str unicode_errors:
-        The error handler for decoding unicode. (default: 'strict')
-        This option should be used only when you have ydtpack data which
-        contains invalid UTF-8 string.
-
-    :param int max_buffer_size:
-        Limits size of data waiting unpacked.  0 means 2**32-1.
-        The default value is 100*1024*1024 (100MiB).
-        Raises `BufferFull` exception when it is insufficient.
-        You should set this parameter when unpacking data from untrusted source.
-
-    :param int max_str_len:
-        Deprecated, use *max_buffer_size* instead.
-        Limits max length of str. (default: max_buffer_size)
-
-    :param int max_bin_len:
-        Deprecated, use *max_buffer_size* instead.
-        Limits max length of bin. (default: max_buffer_size)
-
-    :param int max_array_len:
-        Limits max length of array.
-        (default: max_buffer_size)
-
-    :param int max_map_len:
-        Limits max length of map.
-        (default: max_buffer_size//2)
+    :param callable list_hook:
+        obsolete.
 
     Example of streaming deserialize from file-like object::
 
@@ -277,8 +234,8 @@ cdef class Unpacker(object):
     cdef Py_ssize_t read_size
     # To maintain refcnt.
     cdef object object_hook
-    cdef bint object_as_pairs
     cdef object list_hook
+    cdef bint object_as_pairs
     cdef object unicode_errors
     cdef Py_ssize_t max_buffer_size
     cdef uint64_t stream_offset
@@ -292,23 +249,24 @@ cdef class Unpacker(object):
 
     def __init__(self, file_like=None, *,
                  object unpack_ctrl=None,
-                 Py_ssize_t read_size=0,
-                 bint use_list=True, bint raw=False, bint strict_map_key=True,
-                 object object_hook=None, bint object_as_pairs=False,
-                 object list_hook=None,
-                 unicode_errors=None, Py_ssize_t max_buffer_size=100*1024*1024,
-                 Py_ssize_t max_str_len=-1,
-                 Py_ssize_t max_bin_len=-1,
-                 Py_ssize_t max_array_len=-1,
-                 Py_ssize_t max_map_len=-1):
+                 object object_hook=None, object list_hook=None,
+                 Py_ssize_t buffer_size=0
+                 #Py_ssize_t read_size=0,
+                 #bint use_list=True, bint raw=False, bint strict_map_key=True,
+                 #bint object_as_pairs=False,
+                 #unicode_errors=None, Py_ssize_t max_buffer_size=100*1024*1024,
+                 #Py_ssize_t max_str_len=-1,
+                 #Py_ssize_t max_bin_len=-1,
+                 #Py_ssize_t max_array_len=-1,
+                 #Py_ssize_t max_map_len=-1
+                ):
         cdef const char *cerr=NULL
 
         if unpack_ctrl is None:
            raise(ValueError("No unpack_ctrl supplied."))
 
         self.object_hook = object_hook
-        self.object_as_pairs = object_as_pairs
-        self.list_hook = list_hook
+        self.list_hook   = list_hook
 
         self.file_like = file_like
         if file_like:
@@ -316,40 +274,27 @@ cdef class Unpacker(object):
             if not PyCallable_Check(self.file_like_read):
                 raise TypeError("`file_like.read` must be a callable.")
 
-        if not max_buffer_size:
-            max_buffer_size = INT_MAX
-        if max_str_len == -1:
-            max_str_len = max_buffer_size
-        if max_bin_len == -1:
-            max_bin_len = max_buffer_size
-        if max_array_len == -1:
-            max_array_len = max_buffer_size
-        if max_map_len == -1:
-            max_map_len = max_buffer_size//2
+        o = unpack_ctrl.options
+        if buffer_size == 0:
+            self.max_buffer_size = <Py_ssize_t>o.max_buffer_size
+            self.read_size       = <Py_ssize_t>o.read_size
+        else:
+            self.max_buffer_size = self.read_size = <Py_ssize_t>buffer_size
 
-        if read_size > max_buffer_size:
-            raise ValueError("read_size should be less or equal to max_buffer_size")
-        if not read_size:
-            read_size = min(max_buffer_size, 1024**2)
-
-        self.max_buffer_size = max_buffer_size
-        self.read_size = read_size
-        self.buf = <char*>PyMem_Malloc(read_size)
+        self.buf = <char*>PyMem_Malloc(self.read_size)
         if self.buf == NULL:
             raise MemoryError("Unable to allocate internal buffer.")
-        self.buf_size = read_size
+        self.buf_size = <Py_ssize_t>o.read_size
         self.buf_head = 0
         self.buf_tail = 0
         self.stream_offset = 0
 
-        if unicode_errors is not None:
-            self.unicode_errors = unicode_errors
-            cerr = unicode_errors
+        if o.unicode_errors is not None:
+            cerr = self.unicode_errors = o.unicode_errors
 
-        init_ctx(&self.ctx, object_hook, object_as_pairs, list_hook,
-                 use_list, raw, strict_map_key, cerr,
-                 max_str_len, max_bin_len, max_array_len,
-                 max_map_len)
+        init_ctx(&self.ctx, object_hook, o.object_as_pairs, list_hook,
+                 o.use_list, o.raw, o.strict_map_key, <const char*>cerr,
+                 o.max_str_len, o.max_bin_len, o.max_array_len, o.max_map_len)
 
     def feed(self, object next_bytes):
         """Append `next_bytes` to internal buffer."""

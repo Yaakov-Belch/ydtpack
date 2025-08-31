@@ -30,10 +30,10 @@ def test_invalidvalue():
 
 def test_strict_map_key():
     valid = {"unicode": 1, b"bytes": 2}
-    packed = packb(valid, pack_ctrl=pctrl(), use_bin_type=True)
-    assert valid == unpackb(packed, unpack_ctrl=uctrl(), raw=False, strict_map_key=True)
+    packed = packb(valid, pack_ctrl=pctrl(use_bin_type=True))
+    assert valid == unpackb(packed, unpack_ctrl=uctrl(raw=False, strict_map_key=True))
 
     invalid = {42: 1}
-    packed = packb(invalid, pack_ctrl=pctrl(), use_bin_type=True)
+    packed = packb(invalid, pack_ctrl=pctrl(use_bin_type=True))
     with raises(ValueError):
-        unpackb(packed, unpack_ctrl=uctrl(), raw=False, strict_map_key=True)
+        unpackb(packed, unpack_ctrl=uctrl(raw=False, strict_map_key=True))

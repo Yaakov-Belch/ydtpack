@@ -20,8 +20,8 @@ def _runtest(format, nbytes, expected_header, expected_prefix, use_bin_type):
     view = memoryview(original_array)
 
     # pack, unpack, and reconstruct array
-    packed = packb(view, pack_ctrl=pctrl(), use_bin_type=use_bin_type)
-    unpacked = unpackb(packed, unpack_ctrl=uctrl(), raw=(not use_bin_type))
+    packed = packb(view, pack_ctrl=pctrl(use_bin_type=use_bin_type))
+    unpacked = unpackb(packed, unpack_ctrl=uctrl(raw=(not use_bin_type)))
     reconstructed_array = make_array(format, unpacked)
 
     # check that we got the right amount of data
