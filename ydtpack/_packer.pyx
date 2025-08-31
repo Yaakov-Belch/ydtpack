@@ -3,8 +3,6 @@
 from cpython cimport *
 from cpython.bytearray cimport PyByteArray_Check, PyByteArray_CheckExact
 
-# obsolete
-
 cdef extern from "Python.h":
 
     int PyMemoryView_Check(object obj)

@@ -122,26 +122,26 @@ else:
         from .fallback import Packer, unpackb, Unpacker
 
 
-def pack(o, stream, pack_ctrl, **kwargs):  # kwargs are obsolete hooks
+def pack(o, stream, pack_ctrl):
     """
     Pack object `o` and write it to `stream`
 
     See :class:`Packer` for options.
     """
-    packer = Packer(pack_ctrl=pack_ctrl, **kwargs) # kwargs obsolete
+    packer = Packer(pack_ctrl=pack_ctrl)
     stream.write(packer.pack(o))
 
 
-def packb(o, pack_ctrl, **kwargs): # kwargs are obsolete hooks
+def packb(o, pack_ctrl, **kwargs): # kwargs: obsolete default
     """
     Pack object `o` and return packed bytes
 
     See :class:`Packer` for options.
     """
-    return Packer(pack_ctrl=pack_ctrl, **kwargs).pack(o)
+    return Packer(pack_ctrl=pack_ctrl, **kwargs).pack(o)  # kwargs obsolete
 
 
-def unpack(stream, unpack_ctrl, **kwargs):
+def unpack(stream, unpack_ctrl):
     """
     Unpack an object from `stream`.
 
@@ -149,6 +149,6 @@ def unpack(stream, unpack_ctrl, **kwargs):
     See :class:`Unpacker` for options.
     """
     data = stream.read()
-    return unpackb(data, unpack_ctrl=unpack_ctrl, **kwargs)
+    return unpackb(data, unpack_ctrl=unpack_ctrl)
 
 

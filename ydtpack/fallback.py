@@ -63,7 +63,7 @@ def _get_data_from_buffer(obj):
     return view
 
 
-def unpackb(packed, *, unpack_ctrl, **kwargs): # kwargs are obsolete hooks
+def unpackb(packed, *, unpack_ctrl):
     """
     Unpack an object from `packed`.
 
@@ -75,9 +75,7 @@ def unpackb(packed, *, unpack_ctrl, **kwargs): # kwargs are obsolete hooks
 
     See :class:`Unpacker` for options.
     """
-    unpacker = Unpacker(
-        None, unpack_ctrl=unpack_ctrl, buffer_size=len(packed), **kwargs,
-    )
+    unpacker = Unpacker(None, unpack_ctrl=unpack_ctrl, buffer_size=len(packed))
     unpacker.feed(packed)
     try:
         ret = unpacker._unpack()
