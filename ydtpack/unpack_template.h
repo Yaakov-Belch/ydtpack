@@ -104,13 +104,13 @@ static inline int unpack_execute(unpack_context* ctx, const char* data, Py_ssize
     construct && unpack_callback ## name
 
 #define push_simple_value(func) \
-    if(construct_cb(func)(user, &obj) < 0) { goto _failed; } \
+    if((unpack_callback ## func)(user, &obj) < 0) { goto _failed; } \
     goto _push
 #define push_fixed_value(func, arg) \
-    if(construct_cb(func)(user, arg, &obj) < 0) { goto _failed; } \
+    if((unpack_callback ## func)(user, arg, &obj) < 0) { goto _failed; } \
     goto _push
 #define push_variable_value(func, base, pos, len) \
-    if(construct_cb(func)(user, \
+    if((unpack_callback ## func)(user, \
         (const char*)base, (const char*)pos, len, &obj) < 0) { goto _failed; } \
     goto _push
 
@@ -126,7 +126,7 @@ static inline int unpack_execute(unpack_context* ctx, const char* data, Py_ssize
 
 #define start_container(func, count_, ct_next_) \
     if(top >= MSGPACK_EMBED_STACK_SIZE) { ret = -3; goto _end; } \
-    if(construct_cb(func)(user, count_, &stack[top].obj) < 0) { goto _failed; } \
+    if((unpack_callback ## func)(user, count_, &stack[top].obj) < 0) { goto _failed; } \
     stack[top].ct      = CT_CONTAINER_TYPE; \
     stack[top].ct_next = ct_next_; \
     stack[top].size    = count_; \
@@ -331,7 +331,7 @@ _push:
         c->ct = CT_MAP_VALUE;
         goto _header_again;
     case CT_MAP_VALUE:
-        if(construct_cb(_map_item)(user, c->count, &c->obj, c->map_key, obj) < 0) { goto _failed; }
+        if(unpack_callback_map_item(user, c->count, &c->obj, c->map_key, obj) < 0) { goto _failed; }
         ++c->count;
         c->ct = CT_MAP_KEY;
         goto _check_container_end;
