@@ -449,7 +449,7 @@ cdef class Unpacker(object):
             self.file_like = None
         return 0
 
-    cdef object _unpack(self, execute_fn execute, bint iter=0):
+    cdef object _unpack(self, bint iter=0):
         cdef int ret
         cdef object obj
         cdef Py_ssize_t prev_head
@@ -457,7 +457,7 @@ cdef class Unpacker(object):
         while 1:
             prev_head = self.buf_head
             if prev_head < self.buf_tail:
-                ret = execute(&self.ctx, self.buf, self.buf_tail, &self.buf_head)
+                ret = unpack_construct(&self.ctx, self.buf, self.buf_tail, &self.buf_head)
                 self.stream_offset += self.buf_head - prev_head
             else:
                 ret = 0
@@ -498,7 +498,7 @@ cdef class Unpacker(object):
 
         Raises `OutOfData` when there are no more bytes to unpack.
         """
-        return self._unpack(unpack_construct)
+        return self._unpack()
 
     def tell(self):
         """Returns the current position of the Unpacker in bytes, i.e., the
@@ -511,7 +511,7 @@ cdef class Unpacker(object):
         return self
 
     def __next__(self):
-        return self._unpack(unpack_construct, 1)
+        return self._unpack(1)
 
     # for debug.
     #def _buf(self):
