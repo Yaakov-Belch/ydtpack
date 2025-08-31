@@ -150,12 +150,10 @@ class Unpacker:
     :param callable object_hook:
         When specified, it should be callable.
         Unpacker calls it with a dict argument after unpacking ydtpack map.
-        (See also simplejson)
 
-    :param callable object_pairs_hook:
-        When specified, it should be callable.
-        Unpacker calls it with a list of key-value pairs after unpacking ydtpack map.
-        (See also simplejson)
+    :param callable object_as_pairs:
+        If true, handles maps as tuples of pairs.
+        Otherwise, as dicts (default).
 
     :param str unicode_errors:
         The error handler for decoding unicode. (default: 'strict')
@@ -217,7 +215,7 @@ class Unpacker:
         raw=False,
         strict_map_key=True,
         object_hook=None,
-        object_pairs_hook=None,
+        object_as_pairs=False,
         list_hook=None,
         unicode_errors=None,
         max_buffer_size=100 * 1024 * 1024,
@@ -275,7 +273,7 @@ class Unpacker:
         self._use_list = use_list
         self._list_hook = list_hook
         self._object_hook = object_hook
-        self._object_pairs_hook = object_pairs_hook
+        self._object_as_pairs = object_as_pairs
         self._max_str_len = max_str_len
         self._max_bin_len = max_bin_len
         self._max_array_len = max_array_len
@@ -286,10 +284,6 @@ class Unpacker:
             raise TypeError("`list_hook` is not callable")
         if object_hook is not None and not callable(object_hook):
             raise TypeError("`object_hook` is not callable")
-        if object_pairs_hook is not None and not callable(object_pairs_hook):
-            raise TypeError("`object_pairs_hook` is not callable")
-        if object_hook is not None and object_pairs_hook is not None:
-            raise TypeError("object_pairs_hook and object_hook are mutually exclusive")
 
     def feed(self, next_bytes):
         assert self._feeding
@@ -466,10 +460,8 @@ class Unpacker:
             return ret if self._use_list else tuple(ret)
         if typ == TYPE_MAP:
             ytype = self._unpack() # <= XXX
-            if self._object_pairs_hook is not None:
-                ret = self._object_pairs_hook(
-                    (self._unpack(), self._unpack()) for _ in range(n)
-                )
+            if self._object_as_pairs:
+                ret = tuple((self._unpack(), self._unpack()) for _ in range(n))
             else:
                 ret = {}
                 for _ in range(n):

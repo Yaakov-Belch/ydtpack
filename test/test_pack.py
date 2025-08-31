@@ -158,21 +158,18 @@ def testMapSize(sizes=[0, 5, 50, 1000]):
 
 
 def test_odict():
-    seq = [(b"one", 1), (b"two", 2), (b"three", 3), (b"four", 4)]
+    seq = ((b"one", 1), (b"two", 2), (b"three", 3), (b"four", 4))
     od = OrderedDict(seq)
     assert unpackb(packb(od, pack_ctrl=pctrl0), unpack_ctrl=uctrl0, use_list=1) == dict(seq)
 
-    def pair_hook(seq):
-        return list(seq)
-
-    assert unpackb(packb(od, pack_ctrl=pctrl0), unpack_ctrl=uctrl0, object_pairs_hook=pair_hook, use_list=1) == seq
+    assert unpackb(packb(od, pack_ctrl=pctrl0), unpack_ctrl=uctrl0, object_as_pairs=True, use_list=1) == seq
 
 
 def test_pairlist():
-    pairlist = [(b"a", 1), (2, b"b"), (b"foo", b"bar")]
+    pairlist = ((b"a", 1), (2, b"b"), (b"foo", b"bar"))
     packer = Packer(pack_ctrl=pctrl0)
     packed = packer.pack_map_pairs(None, pairlist)
-    unpacked = unpackb(packed, unpack_ctrl=uctrl0, object_pairs_hook=list, strict_map_key=False)
+    unpacked = unpackb(packed, unpack_ctrl=uctrl0, object_as_pairs=True, strict_map_key=False)
     assert pairlist == unpacked
 
 

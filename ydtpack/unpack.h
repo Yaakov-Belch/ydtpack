@@ -179,7 +179,7 @@ static inline int unpack_callback_map(unpack_user* u, unsigned int n, ydtpack_un
     }
     PyObject *p;
     if (u->has_pairs_hook) {
-        p = PyList_New(n); // Or use tuple?
+        p = PyTuple_New(n); // Or use tuple?
     }
     else {
         p = PyDict_New();
@@ -205,7 +205,7 @@ static inline int unpack_callback_map_item(unpack_user* u, unsigned int current,
             return -1;
         Py_DECREF(k);
         Py_DECREF(v);
-        PyList_SET_ITEM(*c, current, item);
+        PyTuple_SET_ITEM(*c, current, item);
         return 0;
     }
     else if (PyDict_SetItem(*c, k, v) == 0) {

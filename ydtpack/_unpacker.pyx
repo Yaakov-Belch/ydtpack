@@ -51,7 +51,7 @@ cdef extern from "unpack.h":
     void unpack_clear(unpack_context* ctx)
 
 cdef inline init_ctx(unpack_context *ctx,
-                     object object_hook, object object_pairs_hook,
+                     object object_hook, bint object_as_pairs,
                      object list_hook,
                      bint use_list, bint raw,
                      bint strict_map_key,
@@ -74,21 +74,12 @@ cdef inline init_ctx(unpack_context *ctx,
     ctx.user.max_array_len = max_array_len
     ctx.user.max_map_len = max_map_len
 
-    if object_hook is not None and object_pairs_hook is not None:
-        raise TypeError("object_pairs_hook and object_hook are mutually exclusive.")
-
     if object_hook is not None:
         if not PyCallable_Check(object_hook):
             raise TypeError("object_hook must be a callable.")
         ctx.user.object_hook = <PyObject*>object_hook
 
-    if object_pairs_hook is None:
-        ctx.user.has_pairs_hook = False
-    else:
-        if not PyCallable_Check(object_pairs_hook):
-            raise TypeError("object_pairs_hook must be a callable.")
-        ctx.user.object_hook = <PyObject*>object_pairs_hook
-        ctx.user.has_pairs_hook = True
+    ctx.user.has_pairs_hook = object_as_pairs
 
     if list_hook is not None:
         if not PyCallable_Check(list_hook):
@@ -127,7 +118,7 @@ def unpackb(object packed, *,
             object object_hook=None, object list_hook=None,
             bint use_list=True, bint raw=False, bint strict_map_key=True,
             unicode_errors=None,
-            object_pairs_hook=None,
+            object_as_pairs=False,
             Py_ssize_t max_str_len=-1,
             Py_ssize_t max_bin_len=-1,
             Py_ssize_t max_array_len=-1,
@@ -172,7 +163,7 @@ def unpackb(object packed, *,
         max_map_len = buf_len//2
 
     try:
-        init_ctx(&ctx, object_hook, object_pairs_hook, list_hook,
+        init_ctx(&ctx, object_hook, object_as_pairs, list_hook,
                  use_list, raw, strict_map_key, cerr,
                  max_str_len, max_bin_len, max_array_len, max_map_len)
         ret = unpack_construct(&ctx, buf, buf_len, &off)
@@ -199,12 +190,12 @@ cdef class Unpacker(object):
 
     Arguments:
 
-    :param unpack_ctrl:
-        Unpack control context.
-
     :param file_like:
         File-like object having `.read(n)` method.
         If specified, unpacker reads serialized data from it and :meth:`feed()` is not usable.
+
+    :param unpack_ctrl:
+        Unpack control context.
 
     :param int read_size:
         Used as `file_like.read(read_size)`. (default: `min(16*1024, max_buffer_size)`)
@@ -214,7 +205,7 @@ cdef class Unpacker(object):
         Otherwise, unpack to Python tuple. (default: True)
 
     :param bool raw:
-        If true, unpack ydtpack raw to Python bytes.
+        If true, unpack ydtpack strings (raw) to Python bytes.
         Otherwise, unpack to Python str by decoding with UTF-8 encoding (default).
 
     :param bool strict_map_key:
@@ -223,12 +214,10 @@ cdef class Unpacker(object):
     :param callable object_hook:
         When specified, it should be callable.
         Unpacker calls it with a dict argument after unpacking ydtpack map.
-        (See also simplejson)
 
-    :param callable object_pairs_hook:
-        When specified, it should be callable.
-        Unpacker calls it with a list of key-value pairs after unpacking ydtpack map.
-        (See also simplejson)
+    :param callable object_as_pairs:
+        If true, handles maps as tuples of pairs.
+        Otherwise, as dicts (default).
 
     :param str unicode_errors:
         The error handler for decoding unicode. (default: 'strict')
@@ -287,7 +276,9 @@ cdef class Unpacker(object):
     cdef object file_like_read
     cdef Py_ssize_t read_size
     # To maintain refcnt.
-    cdef object object_hook, object_pairs_hook, list_hook
+    cdef object object_hook
+    cdef bint object_as_pairs
+    cdef object list_hook
     cdef object unicode_errors
     cdef Py_ssize_t max_buffer_size
     cdef uint64_t stream_offset
@@ -303,7 +294,8 @@ cdef class Unpacker(object):
                  object unpack_ctrl=None,
                  Py_ssize_t read_size=0,
                  bint use_list=True, bint raw=False, bint strict_map_key=True,
-                 object object_hook=None, object object_pairs_hook=None, object list_hook=None,
+                 object object_hook=None, bint object_as_pairs=False,
+                 object list_hook=None,
                  unicode_errors=None, Py_ssize_t max_buffer_size=100*1024*1024,
                  Py_ssize_t max_str_len=-1,
                  Py_ssize_t max_bin_len=-1,
@@ -315,7 +307,7 @@ cdef class Unpacker(object):
            raise(ValueError("No unpack_ctrl supplied."))
 
         self.object_hook = object_hook
-        self.object_pairs_hook = object_pairs_hook
+        self.object_as_pairs = object_as_pairs
         self.list_hook = list_hook
 
         self.file_like = file_like
@@ -354,7 +346,7 @@ cdef class Unpacker(object):
             self.unicode_errors = unicode_errors
             cerr = unicode_errors
 
-        init_ctx(&self.ctx, object_hook, object_pairs_hook, list_hook,
+        init_ctx(&self.ctx, object_hook, object_as_pairs, list_hook,
                  use_list, raw, strict_map_key, cerr,
                  max_str_len, max_bin_len, max_array_len,
                  max_map_len)
