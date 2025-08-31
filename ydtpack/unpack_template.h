@@ -454,10 +454,6 @@ static inline int unpack_container_header(unpack_context* ctx, const char* data,
 #undef SWITCH_RANGE
 #undef SWITCH_RANGE_DEFAULT
 #undef SWITCH_RANGE_END
-
-static const execute_fn read_array_header = &unpack_container_header<0x90, 0xdc>;
-static const execute_fn read_map_header = &unpack_container_header<0x80, 0xde>;
-
 #undef NEXT_CS
 
 /* vim: set ts=4 sw=4 sts=4 expandtab  */

@@ -46,8 +46,6 @@ from .ext import ExtType, Timestamp
 
 
 EX_CONSTRUCT = 1
-EX_READ_ARRAY_HEADER = 2
-EX_READ_MAP_HEADER = 3
 
 TYPE_IMMEDIATE = 0
 TYPE_ARRAY = 1
@@ -490,14 +488,6 @@ class Unpacker:
     def _unpack(self, execute=EX_CONSTRUCT):
         typ, n, obj = self._read_header()
 
-        if execute == EX_READ_ARRAY_HEADER:
-            if typ != TYPE_ARRAY:
-                raise ValueError("Expected array")
-            return n
-        if execute == EX_READ_MAP_HEADER:
-            if typ != TYPE_MAP:
-                raise ValueError("Expected map")
-            return n
         # TODO should we eliminate the recursion?
         if typ == TYPE_ARRAY:
             ytype = self._unpack(EX_CONSTRUCT) # <= XXX
@@ -571,16 +561,6 @@ class Unpacker:
             ret = self._unpack(EX_CONSTRUCT)
         except RecursionError:
             raise StackError
-        self._consume()
-        return ret
-
-    def read_array_header(self):
-        ret = self._unpack(EX_READ_ARRAY_HEADER)
-        self._consume()
-        return ret
-
-    def read_map_header(self):
-        ret = self._unpack(EX_READ_MAP_HEADER)
         self._consume()
         return ret
 
