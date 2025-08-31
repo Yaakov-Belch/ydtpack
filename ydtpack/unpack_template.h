@@ -77,8 +77,7 @@ static inline void unpack_clear(unpack_context *ctx)
     Py_CLEAR(ctx->stack[0].obj);
 }
 
-template <bool construct>
-static inline int unpack_execute(unpack_context* ctx, const char* data, Py_ssize_t len, Py_ssize_t* off)
+static inline int unpack_construct(unpack_context* ctx, const char* data, Py_ssize_t len, Py_ssize_t* off)
 {
     assert(len >= *off);
 
@@ -364,8 +363,6 @@ _header_again:
 
 
 _finish:
-    if (!construct)
-        unpack_callback_nil(user, &obj);
     stack[0].obj = obj;
     ++p;
     ret = 1;
@@ -458,7 +455,6 @@ static inline int unpack_container_header(unpack_context* ctx, const char* data,
 #undef SWITCH_RANGE_DEFAULT
 #undef SWITCH_RANGE_END
 
-static const execute_fn unpack_construct = &unpack_execute<true>;
 static const execute_fn read_array_header = &unpack_container_header<0x90, 0xdc>;
 static const execute_fn read_map_header = &unpack_container_header<0x80, 0xde>;
 
