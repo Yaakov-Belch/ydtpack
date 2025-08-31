@@ -323,33 +323,36 @@ _push:
     switch(c->ct) {
     case CT_ARRAY_ITEM:
         if(construct_cb(_array_item)(user, c->count, &c->obj, obj) < 0) { goto _failed; }
-        if(++c->count == c->size) {
-            obj = c->obj;
-            if (construct_cb(_array_end)(user, &obj) < 0) { goto _failed; }
-            --top;
-            /*printf("stack pop %d\n", top);*/
-            goto _push;
-        }
-        goto _header_again;
+        ++c->count;
+        goto _check_container_end;
     case CT_MAP_KEY:
         c->map_key = obj;
         c->ct = CT_MAP_VALUE;
         goto _header_again;
     case CT_MAP_VALUE:
         if(construct_cb(_map_item)(user, c->count, &c->obj, c->map_key, obj) < 0) { goto _failed; }
-        if(++c->count == c->size) {
-            obj = c->obj;
-            if (construct_cb(_map_end)(user, &obj) < 0) { goto _failed; }
-            --top;
-            /*printf("stack pop %d\n", top);*/
-            goto _push;
-        }
+        ++c->count;
         c->ct = CT_MAP_KEY;
-        goto _header_again;
-
+        goto _check_container_end;
     default:
         goto _failed;
     }
+
+_check_container_end:
+    c = &stack[top-1];
+    if(c->count == c->size) {
+        obj = c->obj;
+        if(c->ct == CT_ARRAY_ITEM) {
+           if (construct_cb(_array_end)(user, &obj) < 0) { goto _failed; }
+        } else if (c->ct == CT_MAP_KEY) {
+           if (construct_cb(_map_end)(user, &obj) < 0) { goto _failed; }
+        } else {
+           goto _failed;
+        }
+        --top;
+        goto _push;
+    }
+    goto _header_again;
 
 _header_again:
         cs = CS_HEADER;

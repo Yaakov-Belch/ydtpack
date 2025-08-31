@@ -267,6 +267,8 @@ cdef class Packer(object):
                 if L > ITEM_LIMIT:
                     raise ValueError("list is too large")
                 ret = ydtpack_pack_array(&self.pk, L)
+                # if ret != 0: return ret                 #    XXX
+                # ret = self._pack(None, nest_limit-1)    # <= XXX
                 if ret == 0:
                     for v in o:
                         ret = self._pack(v, nest_limit-1)
