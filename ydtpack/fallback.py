@@ -535,10 +535,6 @@ class Packer:
     :param bool use_single_float:
         Use single precision float type for float. (default: False)
 
-    :param bool autoreset:
-        Reset buffer after each pack and return its content as `bytes`. (default: True).
-        If set this to false, use `bytes()` to get content and `.reset()` to clear buffer.
-
     :param bool use_bin_type:
         Use bin type introduced in ydtpack spec 2.0 for bytes.
         It also enables str8 type for unicode. (default: True)
@@ -587,7 +583,6 @@ class Packer:
         pack_ctrl=None,
         default=None,
         use_single_float=False,
-        autoreset=True,
         use_bin_type=True,
         strict_types=False,
         unicode_errors=None,
@@ -597,7 +592,6 @@ class Packer:
            raise(ValueError("No pack_ctrl supplied."))
         self._strict_types = strict_types
         self._use_float = use_single_float
-        self._autoreset = autoreset
         self._use_bin_type = use_bin_type
         self._buffer = StringIO()
         self._unicode_errors = unicode_errors or "strict"
@@ -702,35 +696,31 @@ class Packer:
         except:
             self._buffer = StringIO()  # force reset
             raise
-        if self._autoreset:
-            ret = self._buffer.getvalue()
-            self._buffer = StringIO()
-            return ret
+        ret = self._buffer.getvalue()
+        self._buffer = StringIO()
+        return ret
 
     def pack_map_pairs(self, object_type, pairs):
         self._pack_map_pairs(len(pairs), object_type, pairs)
-        if self._autoreset:
-            ret = self._buffer.getvalue()
-            self._buffer = StringIO()
-            return ret
+        ret = self._buffer.getvalue()
+        self._buffer = StringIO()
+        return ret
 
     def pack_array_header(self, n):
         if n >= 2**32:
             raise ValueError
         self._pack_array_header(n)
-        if self._autoreset:
-            ret = self._buffer.getvalue()
-            self._buffer = StringIO()
-            return ret
+        ret = self._buffer.getvalue()
+        self._buffer = StringIO()
+        return ret
 
     def pack_map_header(self, n):
         if n >= 2**32:
             raise ValueError
         self._pack_map_header(n)
-        if self._autoreset:
-            ret = self._buffer.getvalue()
-            self._buffer = StringIO()
-            return ret
+        ret = self._buffer.getvalue()
+        self._buffer = StringIO()
+        return ret
 
     def _pack_array_header(self, n):
         if n <= 0x0F:
@@ -784,13 +774,6 @@ class Packer:
     def bytes(self):
         """Return internal buffer contents as bytes object"""
         return self._buffer.getvalue()
-
-    def reset(self):
-        """Reset internal buffer.
-
-        This method is useful only when autoreset=False.
-        """
-        self._buffer = StringIO()
 
     def getbuffer(self):
         """Return view of internal buffer."""

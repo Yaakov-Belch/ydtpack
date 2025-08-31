@@ -71,10 +71,6 @@ cdef class Packer(object):
     :param bool use_single_float:
         Use single precision float type for float. (default: False)
 
-    :param bool autoreset:
-        Reset buffer after each pack and return its content as `bytes`. (default: True).
-        If set this to false, use `bytes()` to get content and `.reset()` to clear buffer.
-
     :param bool use_bin_type:
         Use bin type introduced in ydtpack spec 2.0 for bytes.
         It also enables str8 type for unicode. (default: True)
@@ -100,7 +96,6 @@ cdef class Packer(object):
     cdef const char *unicode_errors
     cdef bint strict_types
     cdef bint use_float
-    cdef bint autoreset
     cdef bool sort_keys
 
     def __cinit__(self):
@@ -113,7 +108,7 @@ cdef class Packer(object):
 
     def __init__(self, *,
                  object pack_ctrl, default=None,
-                 bint use_single_float=False, bint autoreset=True, bint use_bin_type=True,
+                 bint use_single_float=False, bint use_bin_type=True,
                  bint strict_types=False, unicode_errors=None,
                  bool sort_keys=False):
 
@@ -122,7 +117,6 @@ cdef class Packer(object):
 
         self.use_float = use_single_float
         self.strict_types = strict_types
-        self.autoreset = autoreset
         self.pk.use_bin_type = use_bin_type
         if default is not None:
             if not PyCallable_Check(default):
@@ -283,10 +277,9 @@ cdef class Packer(object):
             raise
         if ret:  # should not happen.
             raise RuntimeError("internal error")
-        if self.autoreset:
-            buf = PyBytes_FromStringAndSize(self.pk.buf, self.pk.length)
-            self.pk.length = 0
-            return buf
+        buf = PyBytes_FromStringAndSize(self.pk.buf, self.pk.length)
+        self.pk.length = 0
+        return buf
 
     def pack_array_header(self, long long size):
         if size > ITEM_LIMIT:
@@ -296,10 +289,9 @@ cdef class Packer(object):
             raise MemoryError
         elif ret:  # should not happen
             raise TypeError
-        if self.autoreset:
-            buf = PyBytes_FromStringAndSize(self.pk.buf, self.pk.length)
-            self.pk.length = 0
-            return buf
+        buf = PyBytes_FromStringAndSize(self.pk.buf, self.pk.length)
+        self.pk.length = 0
+        return buf
 
     def pack_map_header(self, long long size):
         if size > ITEM_LIMIT:
@@ -309,10 +301,9 @@ cdef class Packer(object):
             raise MemoryError
         elif ret:  # should not happen
             raise TypeError
-        if self.autoreset:
-            buf = PyBytes_FromStringAndSize(self.pk.buf, self.pk.length)
-            self.pk.length = 0
-            return buf
+        buf = PyBytes_FromStringAndSize(self.pk.buf, self.pk.length)
+        self.pk.length = 0
+        return buf
 
     def pack_map_pairs(self, object object_type, object pairs):
         """
@@ -334,17 +325,9 @@ cdef class Packer(object):
             raise MemoryError
         elif ret:  # should not happen
             raise TypeError
-        if self.autoreset:
-            buf = PyBytes_FromStringAndSize(self.pk.buf, self.pk.length)
-            self.pk.length = 0
-            return buf
-
-    def reset(self):
-        """Reset internal buffer.
-
-        This method is useful only when autoreset=False.
-        """
+        buf = PyBytes_FromStringAndSize(self.pk.buf, self.pk.length)
         self.pk.length = 0
+        return buf
 
     def bytes(self):
         """Return internal buffer contents as bytes object"""

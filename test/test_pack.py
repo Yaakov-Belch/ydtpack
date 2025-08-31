@@ -124,23 +124,6 @@ def testArraySize(sizes=[0, 5, 50, 1000]):
         assert unpacker.unpack() == list(range(size))
 
 
-def test_manualreset(sizes=[0, 5, 50, 1000]):
-    packer = Packer(pack_ctrl=pctrl0, autoreset=False)
-    for size in sizes:
-        packer.pack_array_header(size)
-        packer.pack(None)
-        for i in range(size):
-            packer.pack(i)
-
-    bio = BytesIO(packer.bytes())
-    unpacker = Unpacker(bio, unpack_ctrl=uctrl0, use_list=1)
-    for size in sizes:
-        assert unpacker.unpack() == list(range(size))
-
-    packer.reset()
-    assert packer.bytes() == b""
-
-
 def testMapSize(sizes=[0, 5, 50, 1000]):
     bio = BytesIO()
     packer = Packer(pack_ctrl=pctrl0)
@@ -171,17 +154,6 @@ def test_pairlist():
     packed = packer.pack_map_pairs(None, pairlist)
     unpacked = unpackb(packed, unpack_ctrl=uctrl0, object_as_pairs=True, strict_map_key=False)
     assert pairlist == unpacked
-
-
-def test_get_buffer():
-    packer = Packer(pack_ctrl=pctrl0, autoreset=0, use_bin_type=True)
-    packer.pack([1, 2])
-    strm = BytesIO()
-    strm.write(packer.getbuffer())
-    written = strm.getvalue()
-
-    expected = packb([1, 2], pack_ctrl=pctrl0, use_bin_type=True)
-    assert written == expected
 
 
 def test_sort_keys(sizes=[3, 31, 127, 1023]):
