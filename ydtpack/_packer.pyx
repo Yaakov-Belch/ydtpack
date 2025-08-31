@@ -2,17 +2,8 @@
 
 from cpython cimport *
 from cpython.bytearray cimport PyByteArray_Check, PyByteArray_CheckExact
-from cpython.datetime cimport (
-    PyDateTime_CheckExact, PyDelta_CheckExact,
-    datetime_tzinfo, timedelta_days, timedelta_seconds, timedelta_microseconds,
-)
-
 
 # obsolete
-cdef ExtType
-cdef Timestamp
-from .ext import ExtType, Timestamp
-
 
 cdef extern from "Python.h":
 
@@ -42,7 +33,6 @@ cdef extern from "pack.h":
     int ydtpack_pack_bin(ydtpack_packer* pk, size_t l)
     int ydtpack_pack_raw_body(ydtpack_packer* pk, char* body, size_t l)
     int ydtpack_pack_ext(ydtpack_packer* pk, char typecode, size_t l)
-    int ydtpack_pack_timestamp(ydtpack_packer* x, long long seconds, unsigned long nanoseconds);
     int ydtpack_pack_unicode(ydtpack_packer* pk, object o, long long limit)
 
 cdef extern from "buff_converter.h":
@@ -98,11 +88,6 @@ cdef class Packer(object):
         This is useful when trying to implement accurate serialization
         for python types.
 
-    :param bool datetime:
-        If set to true, datetime with tzinfo is packed into Timestamp type.
-        Note that the tzinfo is stripped in the timestamp.
-        You can get UTC datetime with `timestamp=3` option of the Unpacker.
-
     :param str unicode_errors:
         The error handler for encoding unicode. (default: 'strict')
         DO NOT USE THIS!!  This option is kept for very specific usage.
@@ -117,7 +102,6 @@ cdef class Packer(object):
     cdef bint strict_types
     cdef bint use_float
     cdef bint autoreset
-    cdef bint datetime
     cdef bool sort_keys
 
     def __cinit__(self):
@@ -131,7 +115,7 @@ cdef class Packer(object):
     def __init__(self, *,
                  object pack_ctrl, default=None,
                  bint use_single_float=False, bint autoreset=True, bint use_bin_type=True,
-                 bint strict_types=False, bint datetime=False, unicode_errors=None,
+                 bint strict_types=False, unicode_errors=None,
                  bool sort_keys=False):
 
         if pack_ctrl is None:
@@ -140,7 +124,6 @@ cdef class Packer(object):
         self.use_float = use_single_float
         self.strict_types = strict_types
         self.autoreset = autoreset
-        self.datetime = datetime
         self.pk.use_bin_type = use_bin_type
         if default is not None:
             if not PyCallable_Check(default):
@@ -262,19 +245,6 @@ cdef class Packer(object):
                         if ret != 0: break
                         ret = self._pack(v, nest_limit-1)
                         if ret != 0: break
-            elif type(o) is ExtType if strict_types else isinstance(o, ExtType):
-                # This should be before Tuple because ExtType is namedtuple.
-                longval = o.code
-                rawval = o.data
-                L = len(o.data)
-                if L > ITEM_LIMIT:
-                    raise ValueError("EXT data is too large")
-                ret = ydtpack_pack_ext(&self.pk, longval, L)
-                ret = ydtpack_pack_raw_body(&self.pk, rawval, L)
-            elif type(o) is Timestamp:
-                llval = o.seconds
-                ulval = o.nanoseconds
-                ret = ydtpack_pack_timestamp(&self.pk, llval, ulval)
             elif PyList_CheckExact(o) if strict_types else (PyTuple_Check(o) or PyList_Check(o)):
                 L = Py_SIZE(o)
                 if L > ITEM_LIMIT:
@@ -297,19 +267,10 @@ cdef class Packer(object):
                 if ret == 0:
                     ret = ydtpack_pack_raw_body(&self.pk, <char*>view.buf, L)
                 PyBuffer_Release(&view);
-            elif self.datetime and PyDateTime_CheckExact(o) and datetime_tzinfo(o) is not None:
-                delta = o - epoch
-                if not PyDelta_CheckExact(delta):
-                    raise ValueError("failed to calculate delta")
-                llval = timedelta_days(delta) * <long long>(24*60*60) + timedelta_seconds(delta)
-                ulval = timedelta_microseconds(delta) * 1000
-                ret = ydtpack_pack_timestamp(&self.pk, llval, ulval)
             elif not default_used and self._default:
                 o = self._default(o)
                 default_used = 1
                 continue
-            elif self.datetime and PyDateTime_CheckExact(o):
-                PyErr_Format(ValueError, b"can not serialize '%.200s' object where tzinfo=None", Py_TYPE(o).tp_name)
             else:
                 PyErr_Format(TypeError, b"can not serialize '%.200s' object", Py_TYPE(o).tp_name)
             return ret
@@ -327,10 +288,6 @@ cdef class Packer(object):
             buf = PyBytes_FromStringAndSize(self.pk.buf, self.pk.length)
             self.pk.length = 0
             return buf
-
-    def pack_ext_type(self, typecode, data):
-        ydtpack_pack_ext(&self.pk, typecode, len(data))
-        ydtpack_pack_raw_body(&self.pk, data, len(data))
 
     def pack_array_header(self, long long size):
         if size > ITEM_LIMIT:

@@ -1,7 +1,7 @@
 from contexts_for_tests import pctrl0, uctrl0
 from io import BytesIO
 import sys
-from ydtpack import Unpacker, packb, OutOfData, ExtType
+from ydtpack import Unpacker, packb, OutOfData
 from pytest import raises, mark
 
 try:

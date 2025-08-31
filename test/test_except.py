@@ -3,16 +3,9 @@ from contexts_for_tests import pctrl0, uctrl0
 from pytest import raises
 from ydtpack import packb, unpackb, Unpacker, FormatError, StackError, OutOfData
 
-import datetime
-
 
 class DummyException(Exception):
     pass
-
-
-def test_raise_on_find_unsupported_value():
-    with raises(TypeError):
-        packb(datetime.datetime.now())
 
 
 def test_invalidvalue():

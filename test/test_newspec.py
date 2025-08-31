@@ -1,5 +1,5 @@
 from contexts_for_tests import pctrl0, uctrl0
-from ydtpack import packb, unpackb, ExtType
+from ydtpack import packb, unpackb
 
 
 def test_str8():

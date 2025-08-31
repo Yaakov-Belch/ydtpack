@@ -1,6 +1,6 @@
 from contexts_for_tests import pctrl0, uctrl0
 from collections import namedtuple
-from ydtpack import packb, unpackb, ExtType
+from ydtpack import packb, unpackb
 
 
 def test_namedtuple():
@@ -35,25 +35,3 @@ def test_tuple():
     assert expected == t
 
 
-def test_tuple_ext():
-    t = ("one", 2, b"three", (4,))
-
-    MSGPACK_EXT_TYPE_TUPLE = 0
-
-    def default(o):
-        if isinstance(o, tuple):
-            # Convert to list and pack
-            payload = packb(list(o), pack_ctrl=pctrl0, strict_types=True, use_bin_type=True, default=default)
-            return ExtType(MSGPACK_EXT_TYPE_TUPLE, payload)
-        raise TypeError(repr(o))
-
-    def convert(code, payload):
-        if code == MSGPACK_EXT_TYPE_TUPLE:
-            # Unpack and convert to tuple
-            return tuple(unpackb(payload, unpack_ctrl=uctrl0, raw=False, ext_hook=convert))
-        raise ValueError(f"Unknown Ext code {code}")
-
-    data = packb(t, pack_ctrl=pctrl0, strict_types=True, use_bin_type=True, default=default)
-    expected = unpackb(data, unpack_ctrl=uctrl0, raw=False, ext_hook=convert)
-
-    assert expected == t

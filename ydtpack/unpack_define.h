@@ -77,7 +77,6 @@ typedef enum {
 
     ACS_RAW_VALUE,
     ACS_BIN_VALUE,
-    ACS_EXT_VALUE,
 } ydtpack_unpack_state;
 
 

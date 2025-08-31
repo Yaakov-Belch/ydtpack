@@ -1,5 +1,4 @@
 """Fallback pure Python implementation of ydtpack"""
-from datetime import datetime as _DateTime
 import sys
 import struct
 
@@ -40,8 +39,6 @@ else:
 
 
 from .exceptions import BufferFull, OutOfData, ExtraData, FormatError, StackError
-
-from .ext import ExtType, Timestamp
 
 TYPE_IMMEDIATE = 0
 TYPE_ARRAY = 1
@@ -96,9 +93,9 @@ _MSGPACK_HEADERS = {
     0xC4: (1, _NO_FORMAT_USED, TYPE_BIN),
     0xC5: (2, ">H", TYPE_BIN),
     0xC6: (4, ">I", TYPE_BIN),
-    0xC7: (2, "Bb", TYPE_EXT),
-    0xC8: (3, ">Hb", TYPE_EXT),
-    0xC9: (5, ">Ib", TYPE_EXT),
+    0xC7: (2, "Bb", TYPE_EXT),     # TYPE_EXT raises FormatError.
+    0xC8: (3, ">Hb", TYPE_EXT),    # TYPE_EXT raises FormatError.
+    0xC9: (5, ">Ib", TYPE_EXT),    # TYPE_EXT raises FormatError.
     0xCA: (4, ">f"),
     0xCB: (8, ">d"),
     0xCC: (1, _NO_FORMAT_USED),
@@ -109,11 +106,11 @@ _MSGPACK_HEADERS = {
     0xD1: (2, ">h"),
     0xD2: (4, ">i"),
     0xD3: (8, ">q"),
-    0xD4: (1, "b1s", TYPE_EXT),
-    0xD5: (2, "b2s", TYPE_EXT),
-    0xD6: (4, "b4s", TYPE_EXT),
-    0xD7: (8, "b8s", TYPE_EXT),
-    0xD8: (16, "b16s", TYPE_EXT),
+    0xD4: (1, "b1s", TYPE_EXT),    # TYPE_EXT raises FormatError.
+    0xD5: (2, "b2s", TYPE_EXT),    # TYPE_EXT raises FormatError.
+    0xD6: (4, "b4s", TYPE_EXT),    # TYPE_EXT raises FormatError.
+    0xD7: (8, "b8s", TYPE_EXT),    # TYPE_EXT raises FormatError.
+    0xD8: (16, "b16s", TYPE_EXT),  # TYPE_EXT raises FormatError.
     0xD9: (1, _NO_FORMAT_USED, TYPE_RAW),
     0xDA: (2, ">H", TYPE_RAW),
     0xDB: (4, ">I", TYPE_RAW),
@@ -146,14 +143,6 @@ class Unpacker:
     :param bool raw:
         If true, unpack ydtpack raw to Python bytes.
         Otherwise, unpack to Python str by decoding with UTF-8 encoding (default).
-
-    :param int timestamp:
-        Control how timestamp type is unpacked:
-
-            0 - Timestamp
-            1 - float  (Seconds from the EPOCH)
-            2 - int  (Nanoseconds from the EPOCH)
-            3 - datetime.datetime  (UTC).
 
     :param bool strict_map_key:
         If true (default), only str or bytes are accepted for map (dict) keys.
@@ -195,10 +184,6 @@ class Unpacker:
         Limits max length of map.
         (default: max_buffer_size//2)
 
-    :param int max_ext_len:
-        Deprecated, use *max_buffer_size* instead.
-        Limits max size of ext type.  (default: max_buffer_size)
-
     Example of streaming deserialize from file-like object::
 
         unpacker = Unpacker(file_like)
@@ -230,19 +215,16 @@ class Unpacker:
         read_size=0,
         use_list=True,
         raw=False,
-        timestamp=0,
         strict_map_key=True,
         object_hook=None,
         object_pairs_hook=None,
         list_hook=None,
         unicode_errors=None,
         max_buffer_size=100 * 1024 * 1024,
-        ext_hook=ExtType,
         max_str_len=-1,
         max_bin_len=-1,
         max_array_len=-1,
         max_map_len=-1,
-        max_ext_len=-1,
     ):
         if unpack_ctrl is None:
             raise ValueError("No unpack_ctrl supplied.")
@@ -282,8 +264,6 @@ class Unpacker:
             max_array_len = max_buffer_size
         if max_map_len == -1:
             max_map_len = max_buffer_size // 2
-        if max_ext_len == -1:
-            max_ext_len = max_buffer_size
 
         self._max_buffer_size = max_buffer_size
         if read_size > self._max_buffer_size:
@@ -293,18 +273,13 @@ class Unpacker:
         self._strict_map_key = bool(strict_map_key)
         self._unicode_errors = unicode_errors
         self._use_list = use_list
-        if not (0 <= timestamp <= 3):
-            raise ValueError("timestamp must be 0..3")
-        self._timestamp = timestamp
         self._list_hook = list_hook
         self._object_hook = object_hook
         self._object_pairs_hook = object_pairs_hook
-        self._ext_hook = ext_hook
         self._max_str_len = max_str_len
         self._max_bin_len = max_bin_len
         self._max_array_len = max_array_len
         self._max_map_len = max_map_len
-        self._max_ext_len = max_ext_len
         self._stream_offset = 0
 
         if list_hook is not None and not callable(list_hook):
@@ -315,8 +290,6 @@ class Unpacker:
             raise TypeError("`object_pairs_hook` is not callable")
         if object_hook is not None and object_pairs_hook is not None:
             raise TypeError("object_pairs_hook and object_hook are mutually exclusive")
-        if not callable(ext_hook):
-            raise TypeError("`ext_hook` is not callable")
 
     def feed(self, next_bytes):
         assert self._feeding
@@ -418,13 +391,14 @@ class Unpacker:
             typ = TYPE_MAP
             if n > self._max_map_len:
                 raise ValueError(f"{n} exceeds max_map_len({self._max_map_len})")
-        elif b == 0xC0:
+        elif b == 0xc0:
             obj = None
-        elif b == 0xC2:
+        # elif b == 0xc1: pass # never used
+        elif b == 0xc2:
             obj = False
-        elif b == 0xC3:
+        elif b == 0xc3:
             obj = True
-        elif 0xC4 <= b <= 0xC6:
+        elif 0xc4 <= b <= 0xc6:
             size, fmt, typ = _MSGPACK_HEADERS[b]
             self._reserve(size)
             if len(fmt) > 0:
@@ -435,15 +409,8 @@ class Unpacker:
             if n > self._max_bin_len:
                 raise ValueError(f"{n} exceeds max_bin_len({self._max_bin_len})")
             obj = self._read(n)
-        elif 0xC7 <= b <= 0xC9:
-            size, fmt, typ = _MSGPACK_HEADERS[b]
-            self._reserve(size)
-            L, n = struct.unpack_from(fmt, self._buffer, self._buff_i)
-            self._buff_i += size
-            if L > self._max_ext_len:
-                raise ValueError(f"{L} exceeds max_ext_len({self._max_ext_len})")
-            obj = self._read(L)
-        elif 0xCA <= b <= 0xD3:
+        # elif 0xc7 <= b <= 0xc9: # ext8..ext32 removed
+        elif 0xca <= b <= 0xd3:
             size, fmt = _MSGPACK_HEADERS[b]
             self._reserve(size)
             if len(fmt) > 0:
@@ -451,14 +418,8 @@ class Unpacker:
             else:
                 obj = self._buffer[self._buff_i]
             self._buff_i += size
-        elif 0xD4 <= b <= 0xD8:
-            size, fmt, typ = _MSGPACK_HEADERS[b]
-            if self._max_ext_len < size:
-                raise ValueError(f"{size} exceeds max_ext_len({self._max_ext_len})")
-            self._reserve(size + 1)
-            n, obj = struct.unpack_from(fmt, self._buffer, self._buff_i)
-            self._buff_i += size + 1
-        elif 0xD9 <= b <= 0xDB:
+        # elif 0xd4 <= b <= 0xd8: # fixext 1-16 removed
+        elif 0xd9 <= b <= 0xdb:
             size, fmt, typ = _MSGPACK_HEADERS[b]
             self._reserve(size)
             if len(fmt) > 0:
@@ -469,14 +430,14 @@ class Unpacker:
             if n > self._max_str_len:
                 raise ValueError(f"{n} exceeds max_str_len({self._max_str_len})")
             obj = self._read(n)
-        elif 0xDC <= b <= 0xDD:
+        elif 0xdc <= b <= 0xdd:
             size, fmt, typ = _MSGPACK_HEADERS[b]
             self._reserve(size)
             (n,) = struct.unpack_from(fmt, self._buffer, self._buff_i)
             self._buff_i += size
             if n > self._max_array_len:
                 raise ValueError(f"{n} exceeds max_array_len({self._max_array_len})")
-        elif 0xDE <= b <= 0xDF:
+        elif 0xde <= b <= 0xdf:
             size, fmt, typ = _MSGPACK_HEADERS[b]
             self._reserve(size)
             (n,) = struct.unpack_from(fmt, self._buffer, self._buff_i)
@@ -485,6 +446,9 @@ class Unpacker:
                 raise ValueError(f"{n} exceeds max_map_len({self._max_map_len})")
         else:
             raise FormatError("Unknown header: 0x%x" % b)
+        if typ == TYPE_EXT:
+            raise FormatError("Ext header not supported: 0x%x" % b)
+
         return typ, n, obj
 
     def _unpack(self):
@@ -526,19 +490,6 @@ class Unpacker:
             return obj
         if typ == TYPE_BIN:
             return bytes(obj)
-        if typ == TYPE_EXT:
-            if n == -1:  # timestamp
-                ts = Timestamp.from_bytes(bytes(obj))
-                if self._timestamp == 1:
-                    return ts.to_unix()
-                elif self._timestamp == 2:
-                    return ts.to_unix_nano()
-                elif self._timestamp == 3:
-                    return ts.to_datetime()
-                else:
-                    return ts
-            else:
-                return self._ext_hook(n, bytes(obj))
         assert typ == TYPE_IMMEDIATE
         return obj
 
@@ -608,11 +559,6 @@ class Packer:
         This is useful when trying to implement accurate serialization
         for python types.
 
-    :param bool datetime:
-        If set to true, datetime with tzinfo is packed into Timestamp type.
-        Note that the tzinfo is stripped in the timestamp.
-        You can get UTC datetime with `timestamp=3` option of the Unpacker.
-
     :param str unicode_errors:
         The error handler for encoding unicode. (default: 'strict')
         DO NOT USE THIS!!  This option is kept for very specific usage.
@@ -652,7 +598,6 @@ class Packer:
         autoreset=True,
         use_bin_type=True,
         strict_types=False,
-        datetime=False,
         unicode_errors=None,
         sort_keys=False,
     ):
@@ -663,7 +608,6 @@ class Packer:
         self._autoreset = autoreset
         self._use_bin_type = use_bin_type
         self._buffer = StringIO()
-        self._datetime = bool(datetime)
         self._unicode_errors = unicode_errors or "strict"
         self._sort_keys = sort_keys
         if default is not None:
@@ -742,35 +686,6 @@ class Packer:
                 if self._use_float:
                     return self._buffer.write(struct.pack(">Bf", 0xCA, obj))
                 return self._buffer.write(struct.pack(">Bd", 0xCB, obj))
-            if check(obj, (ExtType, Timestamp)):
-                if check(obj, Timestamp):
-                    code = -1
-                    data = obj.to_bytes()
-                else:
-                    code = obj.code
-                    data = obj.data
-                assert isinstance(code, int)
-                assert isinstance(data, bytes)
-                L = len(data)
-                if L == 1:
-                    self._buffer.write(b"\xd4")
-                elif L == 2:
-                    self._buffer.write(b"\xd5")
-                elif L == 4:
-                    self._buffer.write(b"\xd6")
-                elif L == 8:
-                    self._buffer.write(b"\xd7")
-                elif L == 16:
-                    self._buffer.write(b"\xd8")
-                elif L <= 0xFF:
-                    self._buffer.write(struct.pack(">BB", 0xC7, L))
-                elif L <= 0xFFFF:
-                    self._buffer.write(struct.pack(">BH", 0xC8, L))
-                else:
-                    self._buffer.write(struct.pack(">BI", 0xC9, L))
-                self._buffer.write(struct.pack("b", code))
-                self._buffer.write(data)
-                return
             if check(obj, list_types):
                 n = len(obj)
                 self._pack_array_header(n)
@@ -782,18 +697,10 @@ class Packer:
                 _items = sorted(obj.items()) if self._sort_keys else obj.items()
                 return self._pack_map_pairs(len(obj), None, _items, nest_limit - 1)
 
-            if self._datetime and check(obj, _DateTime) and obj.tzinfo is not None:
-                obj = Timestamp.from_datetime(obj)
-                default_used = 1
-                continue
-
             if not default_used and self._default is not None:
                 obj = self._default(obj)
                 default_used = 1
                 continue
-
-            if self._datetime and check(obj, _DateTime):
-                raise ValueError(f"Cannot serialize {obj!r} where tzinfo=None")
 
             raise TypeError(f"Cannot serialize {obj!r}")
 
@@ -832,35 +739,6 @@ class Packer:
             ret = self._buffer.getvalue()
             self._buffer = StringIO()
             return ret
-
-    def pack_ext_type(self, typecode, data):
-        if not isinstance(typecode, int):
-            raise TypeError("typecode must have int type.")
-        if not 0 <= typecode <= 127:
-            raise ValueError("typecode should be 0-127")
-        if not isinstance(data, bytes):
-            raise TypeError("data must have bytes type")
-        L = len(data)
-        if L > 0xFFFFFFFF:
-            raise ValueError("Too large data")
-        if L == 1:
-            self._buffer.write(b"\xd4")
-        elif L == 2:
-            self._buffer.write(b"\xd5")
-        elif L == 4:
-            self._buffer.write(b"\xd6")
-        elif L == 8:
-            self._buffer.write(b"\xd7")
-        elif L == 16:
-            self._buffer.write(b"\xd8")
-        elif L <= 0xFF:
-            self._buffer.write(b"\xc7" + struct.pack("B", L))
-        elif L <= 0xFFFF:
-            self._buffer.write(b"\xc8" + struct.pack(">H", L))
-        else:
-            self._buffer.write(b"\xc9" + struct.pack(">I", L))
-        self._buffer.write(struct.pack("B", typecode))
-        self._buffer.write(data)
 
     def _pack_array_header(self, n):
         if n <= 0x0F:

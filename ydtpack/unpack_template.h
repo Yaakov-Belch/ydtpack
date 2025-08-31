@@ -169,12 +169,13 @@ static inline int unpack_construct(unpack_context* ctx, const char* data, Py_ssi
                     again_fixed_trail(NEXT_CS(p), 2);
                 case 0xc6:  // bin 32
                     again_fixed_trail(NEXT_CS(p), 4);
-                case 0xc7:  // ext 8
-                    again_fixed_trail(NEXT_CS(p), 1);
-                case 0xc8:  // ext 16
-                    again_fixed_trail(NEXT_CS(p), 2);
-                case 0xc9:  // ext 32
-                    again_fixed_trail(NEXT_CS(p), 4);
+
+                case 0xc7:  // ext 8     -- removed
+                case 0xc8:  // ext 16    -- removed
+                case 0xc9:  // ext 32    -- removed
+                    ret = -2;
+                    goto _end;
+
                 case 0xca:  // float
                 case 0xcb:  // double
                 case 0xcc:  // unsigned int  8
@@ -186,15 +187,15 @@ static inline int unpack_construct(unpack_context* ctx, const char* data, Py_ssi
                 case 0xd2:  // signed int 32
                 case 0xd3:  // signed int 64
                     again_fixed_trail(NEXT_CS(p), 1 << (((unsigned int)*p) & 0x03));
-                case 0xd4:  // fixext 1
-                case 0xd5:  // fixext 2
-                case 0xd6:  // fixext 4
-                case 0xd7:  // fixext 8
-                    again_fixed_trail_if_zero(ACS_EXT_VALUE, 
-                                              (1 << (((unsigned int)*p) & 0x03))+1,
-                                              _ext_zero);
-                case 0xd8:  // fixext 16
-                    again_fixed_trail_if_zero(ACS_EXT_VALUE, 16+1, _ext_zero);
+
+                case 0xd4:  // fixext 1  -- removed
+                case 0xd5:  // fixext 2  -- removed
+                case 0xd6:  // fixext 4  -- removed
+                case 0xd7:  // fixext 8  -- removed
+                case 0xd8:  // fixext 16 -- removed
+                    ret = -2;
+                    goto _end;
+
                 case 0xd9:  // str 8
                     again_fixed_trail(NEXT_CS(p), 1);
                 case 0xda:  // raw 16
@@ -229,16 +230,12 @@ static inline int unpack_construct(unpack_context* ctx, const char* data, Py_ssi
             if((size_t)(pe - p) < trail) { goto _out; }
             n = p;  p += trail - 1;
             switch(cs) {
-            case CS_EXT_8:
-                again_fixed_trail_if_zero(ACS_EXT_VALUE, *(uint8_t*)n+1, _ext_zero);
-            case CS_EXT_16:
-                again_fixed_trail_if_zero(ACS_EXT_VALUE,
-                                          _ydtpack_load16(uint16_t,n)+1,
-                                          _ext_zero);
-            case CS_EXT_32:
-                again_fixed_trail_if_zero(ACS_EXT_VALUE,
-                                          _ydtpack_load32(uint32_t,n)+1,
-                                          _ext_zero);
+            case CS_EXT_8:  // removed
+            case CS_EXT_16: // removed
+            case CS_EXT_32: // removed
+                    ret = -2;
+                    goto _end;
+
             case CS_FLOAT: {
                     double f;
 #if PY_VERSION_HEX >= 0x030B00A7
@@ -292,10 +289,6 @@ static inline int unpack_construct(unpack_context* ctx, const char* data, Py_ssi
             case ACS_RAW_VALUE:
             _raw_zero:
                 push_variable_value(_raw, data, n, trail);
-
-            case ACS_EXT_VALUE:
-            _ext_zero:
-                push_variable_value(_ext, data, n, trail);
 
             case CS_ARRAY_16:
                 start_container(_array, _ydtpack_load16(uint16_t,n), CT_ARRAY_ITEM);

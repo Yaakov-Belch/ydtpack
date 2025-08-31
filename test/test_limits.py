@@ -7,7 +7,6 @@ from ydtpack import (
     unpackb,
     Packer,
     Unpacker,
-    ExtType,
     PackOverflowError,
     PackValueError,
     UnpackValueError,
@@ -91,20 +90,6 @@ def test_max_map_len():
     assert unpacker.unpack() == d
 
     unpacker = Unpacker(unpack_ctrl=uctrl0, max_map_len=2, strict_map_key=False)
-    with pytest.raises(UnpackValueError):
-        unpacker.feed(packed)
-        unpacker.unpack()
-
-
-def test_max_ext_len():
-    d = ExtType(42, b"abc")
-    packed = packb(d, pack_ctrl=pctrl0)
-
-    unpacker = Unpacker(unpack_ctrl=uctrl0, max_ext_len=3)
-    unpacker.feed(packed)
-    assert unpacker.unpack() == d
-
-    unpacker = Unpacker(unpack_ctrl=uctrl0, max_ext_len=2)
     with pytest.raises(UnpackValueError):
         unpacker.feed(packed)
         unpacker.unpack()
