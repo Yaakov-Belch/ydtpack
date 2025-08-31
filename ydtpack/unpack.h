@@ -178,7 +178,7 @@ static inline int unpack_callback_map(unpack_user* u, unsigned int n, ydtpack_un
         return -1;
     }
     PyObject *p;
-    if (u->object_as_pairs) {
+    if (u->has_pairs_hook) {
         p = PyTuple_New(n); // Or use tuple?
     }
     else {
@@ -199,7 +199,7 @@ static inline int unpack_callback_map_item(unpack_user* u, unsigned int current,
     if (PyUnicode_CheckExact(k)) {
         PyUnicode_InternInPlace(&k);
     }
-    if (u->object_as_pairs) {
+    if (u->has_pairs_hook) {
         ydtpack_unpack_object item = PyTuple_Pack(2, k, v);
         if (!item)
             return -1;
