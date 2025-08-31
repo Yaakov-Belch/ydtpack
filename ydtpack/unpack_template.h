@@ -321,10 +321,6 @@ _push:
     if(top == 0) { goto _finish; }
     c = &stack[top-1];
     switch(c->ct) {
-    case CT_ARRAY_ITEM:
-        if(construct_cb(_array_item)(user, c->count, &c->obj, obj) < 0) { goto _failed; }
-        ++c->count;
-        goto _check_container_end;
     case CT_MAP_KEY:
         c->map_key = obj;
         c->ct = CT_MAP_VALUE;
@@ -333,6 +329,10 @@ _push:
         if(construct_cb(_map_item)(user, c->count, &c->obj, c->map_key, obj) < 0) { goto _failed; }
         ++c->count;
         c->ct = CT_MAP_KEY;
+        goto _check_container_end;
+    case CT_ARRAY_ITEM:
+        if(construct_cb(_array_item)(user, c->count, &c->obj, obj) < 0) { goto _failed; }
+        ++c->count;
         goto _check_container_end;
     default:
         goto _failed;
