@@ -100,9 +100,6 @@ static inline int unpack_execute(unpack_context* ctx, const char* data, Py_ssize
 
     int ret;
 
-#define construct_cb(name) \
-    construct && unpack_callback ## name
-
 #define push_simple_value(func) \
     if((unpack_callback ## func)(user, &obj) < 0) { goto _failed; } \
     goto _push
@@ -336,7 +333,7 @@ _push:
         c->ct = CT_MAP_KEY;
         goto _check_container_end;
     case CT_ARRAY_ITEM:
-        if(construct_cb(_array_item)(user, c->count, &c->obj, obj) < 0) { goto _failed; }
+        if(unpack_callback_array_item(user, c->count, &c->obj, obj) < 0) { goto _failed; }
         ++c->count;
         goto _check_container_end;
     default:
@@ -348,9 +345,9 @@ _check_container_end:
     if(c->count == c->size) {
         obj = c->obj;
         if(c->ct == CT_ARRAY_ITEM) {
-           if (construct_cb(_array_end)(user, &obj) < 0) { goto _failed; }
+           if (unpack_callback_array_end(user, &obj) < 0) { goto _failed; }
         } else if (c->ct == CT_MAP_KEY) {
-           if (construct_cb(_map_end)(user, &obj) < 0) { goto _failed; }
+           if (unpack_callback_map_end(user, &obj) < 0) { goto _failed; }
         } else {
            goto _failed;
         }
@@ -391,7 +388,6 @@ _end:
     *off = p - (const unsigned char*)data;
 
     return ret;
-#undef construct_cb
 }
 
 #undef SWITCH_RANGE_BEGIN
