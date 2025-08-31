@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-from contexts_for_tests import pctrl0, uctrl0
+from contexts_for_tests import pctrl, uctrl
 from ydtpack import packb, unpackb
 
 
 def check(length, obj, use_bin_type=True):
-    v = packb(obj, pack_ctrl=pctrl0, use_bin_type=use_bin_type)
+    v = packb(obj, pack_ctrl=pctrl(), use_bin_type=use_bin_type)
     assert len(v) == length, f"{obj!r} length should be {length!r} but get {len(v)!r}"
-    assert unpackb(v, unpack_ctrl=uctrl0, use_list=0, raw=not use_bin_type) == obj
+    assert unpackb(v, unpack_ctrl=uctrl(), use_list=0, raw=not use_bin_type) == obj
 
 
 def test_1():
@@ -91,8 +91,8 @@ def test_array32():
 
 
 def match(obj, buf):
-    assert packb(obj, pack_ctrl=pctrl0) == buf
-    assert unpackb(buf, unpack_ctrl=uctrl0, use_list=0, strict_map_key=False) == obj
+    assert packb(obj, pack_ctrl=pctrl()) == buf
+    assert unpackb(buf, unpack_ctrl=uctrl(), use_list=0, strict_map_key=False) == obj
 
 
 def test_match():
@@ -134,4 +134,4 @@ def test_match():
 
 
 def test_unicode():
-    assert unpackb(packb("foobar", pack_ctrl=pctrl0), unpack_ctrl=uctrl0, use_list=1) == "foobar"
+    assert unpackb(packb("foobar", pack_ctrl=pctrl()), unpack_ctrl=uctrl(), use_list=1) == "foobar"

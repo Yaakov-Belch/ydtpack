@@ -122,7 +122,7 @@ _MSGPACK_HEADERS = {
 
 
 class Unpacker:
-    """Streaming unpacker.
+    """Streaming tmsgpack unpacker.
 
     Arguments:
 
@@ -515,7 +515,7 @@ class Unpacker:
 
 class Packer:
     """
-    MessagePack Packer
+    tmsgpack Packer
 
     Usage::
 

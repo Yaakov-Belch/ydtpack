@@ -51,7 +51,7 @@ cdef inline int PyBytesLike_CheckExact(object o):
 
 cdef class Packer(object):
     """
-    MessagePack Packer
+    tmsgpack Packer
 
     Usage::
 

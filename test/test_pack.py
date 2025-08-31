@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from contexts_for_tests import pctrl0, uctrl0
+from contexts_for_tests import pctrl, uctrl
 from collections import OrderedDict
 from io import BytesIO
 import struct
@@ -12,7 +12,7 @@ from ydtpack import packb, unpackb, Unpacker, Packer, pack
 
 
 def check(data, use_list=False):
-    re = unpackb(packb(data, pack_ctrl=pctrl0), unpack_ctrl=uctrl0, use_list=use_list, strict_map_key=False)
+    re = unpackb(packb(data, pack_ctrl=pctrl()), unpack_ctrl=uctrl(), use_list=use_list, strict_map_key=False)
     assert re == data
 
 
@@ -58,11 +58,11 @@ def testPack():
 def testPackUnicode():
     test_data = ["", "abcd", ["defgh"], "Русский текст"]
     for td in test_data:
-        re = unpackb(packb(td, pack_ctrl=pctrl0), unpack_ctrl=uctrl0, use_list=1, raw=False)
+        re = unpackb(packb(td, pack_ctrl=pctrl()), unpack_ctrl=uctrl(), use_list=1, raw=False)
         assert re == td
-        packer = Packer(pack_ctrl=pctrl0)
+        packer = Packer(pack_ctrl=pctrl())
         data = packer.pack(td)
-        re = Unpacker(BytesIO(data), unpack_ctrl=uctrl0, raw=False, use_list=1).unpack()
+        re = Unpacker(BytesIO(data), unpack_ctrl=uctrl(), raw=False, use_list=1).unpack()
         assert re == td
 
 
@@ -79,20 +79,20 @@ def testPackByteArrays():
 
 
 def testIgnoreUnicodeErrors():
-    re = unpackb(packb(b"abc\xeddef", pack_ctrl=pctrl0, use_bin_type=False), unpack_ctrl=uctrl0, raw=False, unicode_errors="ignore")
+    re = unpackb(packb(b"abc\xeddef", pack_ctrl=pctrl(), use_bin_type=False), unpack_ctrl=uctrl(), raw=False, unicode_errors="ignore")
     assert re == "abcdef"
 
 
 def testStrictUnicodeUnpack():
-    packed = packb(b"abc\xeddef", pack_ctrl=pctrl0, use_bin_type=False)
+    packed = packb(b"abc\xeddef", pack_ctrl=pctrl(), use_bin_type=False)
     with pytest.raises(UnicodeDecodeError):
-        unpackb(packed, unpack_ctrl=uctrl0, raw=False, use_list=1)
+        unpackb(packed, unpack_ctrl=uctrl(), raw=False, use_list=1)
 
 
 def testIgnoreErrorsPack():
     re = unpackb(
-        packb("abc\uDC80\uDCFFdef", pack_ctrl=pctrl0, use_bin_type=True, unicode_errors="ignore"),
-        unpack_ctrl=uctrl0,
+        packb("abc\uDC80\uDCFFdef", pack_ctrl=pctrl(), use_bin_type=True, unicode_errors="ignore"),
+        unpack_ctrl=uctrl(),
         raw=False,
         use_list=1,
     )
@@ -100,18 +100,18 @@ def testIgnoreErrorsPack():
 
 
 def testDecodeBinary():
-    re = unpackb(packb(b"abc", pack_ctrl=pctrl0), unpack_ctrl=uctrl0, use_list=1)
+    re = unpackb(packb(b"abc", pack_ctrl=pctrl()), unpack_ctrl=uctrl(), use_list=1)
     assert re == b"abc"
 
 
 def testPackFloat():
-    assert packb(1.0, pack_ctrl=pctrl0, use_single_float=True) == b"\xca" + struct.pack(">f", 1.0)
-    assert packb(1.0, pack_ctrl=pctrl0, use_single_float=False) == b"\xcb" + struct.pack(">d", 1.0)
+    assert packb(1.0, pack_ctrl=pctrl(), use_single_float=True) == b"\xca" + struct.pack(">f", 1.0)
+    assert packb(1.0, pack_ctrl=pctrl(), use_single_float=False) == b"\xcb" + struct.pack(">d", 1.0)
 
 
 def testArraySize(sizes=[0, 5, 50, 1000]):
     bio = BytesIO()
-    packer = Packer(pack_ctrl=pctrl0)
+    packer = Packer(pack_ctrl=pctrl())
     for size in sizes:
         bio.write(packer.pack_array_header(size))
         bio.write(packer.pack(None))
@@ -119,14 +119,14 @@ def testArraySize(sizes=[0, 5, 50, 1000]):
             bio.write(packer.pack(i))
 
     bio.seek(0)
-    unpacker = Unpacker(bio, unpack_ctrl=uctrl0, use_list=1)
+    unpacker = Unpacker(bio, unpack_ctrl=uctrl(), use_list=1)
     for size in sizes:
         assert unpacker.unpack() == list(range(size))
 
 
 def testMapSize(sizes=[0, 5, 50, 1000]):
     bio = BytesIO()
-    packer = Packer(pack_ctrl=pctrl0)
+    packer = Packer(pack_ctrl=pctrl())
     for size in sizes:
         bio.write(packer.pack_map_header(size))
         bio.write(packer.pack(None))
@@ -135,7 +135,7 @@ def testMapSize(sizes=[0, 5, 50, 1000]):
             bio.write(packer.pack(i * 2))  # value
 
     bio.seek(0)
-    unpacker = Unpacker(bio, unpack_ctrl=uctrl0, strict_map_key=False)
+    unpacker = Unpacker(bio, unpack_ctrl=uctrl(), strict_map_key=False)
     for size in sizes:
         assert unpacker.unpack() == {i: i * 2 for i in range(size)}
 
@@ -143,16 +143,16 @@ def testMapSize(sizes=[0, 5, 50, 1000]):
 def test_odict():
     seq = ((b"one", 1), (b"two", 2), (b"three", 3), (b"four", 4))
     od = OrderedDict(seq)
-    assert unpackb(packb(od, pack_ctrl=pctrl0), unpack_ctrl=uctrl0, use_list=1) == dict(seq)
+    assert unpackb(packb(od, pack_ctrl=pctrl()), unpack_ctrl=uctrl(), use_list=1) == dict(seq)
 
-    assert unpackb(packb(od, pack_ctrl=pctrl0), unpack_ctrl=uctrl0, object_as_pairs=True, use_list=1) == seq
+    assert unpackb(packb(od, pack_ctrl=pctrl()), unpack_ctrl=uctrl(), object_as_pairs=True, use_list=1) == seq
 
 
 def test_pairlist():
     pairlist = ((b"a", 1), (2, b"b"), (b"foo", b"bar"))
-    packer = Packer(pack_ctrl=pctrl0)
+    packer = Packer(pack_ctrl=pctrl())
     packed = packer.pack_map_pairs(None, pairlist)
-    unpacked = unpackb(packed, unpack_ctrl=uctrl0, object_as_pairs=True, strict_map_key=False)
+    unpacked = unpackb(packed, unpack_ctrl=uctrl(), object_as_pairs=True, strict_map_key=False)
     assert pairlist == unpacked
 
 
@@ -161,5 +161,5 @@ def test_sort_keys(sizes=[3, 31, 127, 1023]):
         keys = range(1, 1000000000, 1000000000 // size)
         map1 = {k: k for k in keys}
         map2 = {k: k for k in reversed(keys)}
-        assert packb(map1, pack_ctrl=pctrl0, sort_keys=False) != packb(map2, pack_ctrl=pctrl0, sort_keys=False)
-        assert packb(map1, pack_ctrl=pctrl0, sort_keys=True) == packb(map2, pack_ctrl=pctrl0, sort_keys=True)
+        assert packb(map1, pack_ctrl=pctrl(), sort_keys=False) != packb(map2, pack_ctrl=pctrl(), sort_keys=False)
+        assert packb(map1, pack_ctrl=pctrl(), sort_keys=True) == packb(map2, pack_ctrl=pctrl(), sort_keys=True)

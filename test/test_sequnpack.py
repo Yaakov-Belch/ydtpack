@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from contexts_for_tests import pctrl0, uctrl0
+from contexts_for_tests import pctrl, uctrl
 import io
 from ydtpack import Unpacker, BufferFull
 from ydtpack import pack, packb
@@ -8,7 +8,7 @@ from pytest import raises
 
 
 def test_partialdata():
-    unpacker = Unpacker(unpack_ctrl=uctrl0)
+    unpacker = Unpacker(unpack_ctrl=uctrl())
     unpacker.feed(b"\xa5")
     with raises(StopIteration):
         next(iter(unpacker))
@@ -29,7 +29,7 @@ def test_partialdata():
 
 
 def test_foobar():
-    unpacker = Unpacker(unpack_ctrl=uctrl0, read_size=3, use_list=1)
+    unpacker = Unpacker(unpack_ctrl=uctrl(), read_size=3, use_list=1)
     unpacker.feed(b"foobar")
     assert unpacker.unpack() == ord(b"f")
     assert unpacker.unpack() == ord(b"o")
@@ -52,8 +52,8 @@ def test_foobar():
 
 def test_maxbuffersize():
     with raises(ValueError):
-        Unpacker(unpack_ctrl=uctrl0, read_size=5, max_buffer_size=3)
-    unpacker = Unpacker(unpack_ctrl=uctrl0, read_size=3, max_buffer_size=3, use_list=1)
+        Unpacker(unpack_ctrl=uctrl(), read_size=5, max_buffer_size=3)
+    unpacker = Unpacker(unpack_ctrl=uctrl(), read_size=3, max_buffer_size=3, use_list=1)
     unpacker.feed(b"fo")
     with raises(BufferFull):
         unpacker.feed(b"ob")
@@ -66,8 +66,8 @@ def test_maxbuffersize():
 
 
 def test_maxbuffersize_file():
-    buff = io.BytesIO(packb(b"a" * 10, pack_ctrl=pctrl0) + packb([b"a" * 20] * 2, pack_ctrl=pctrl0))
-    unpacker = Unpacker(buff, unpack_ctrl=uctrl0, read_size=1, max_buffer_size=19, max_bin_len=20)
+    buff = io.BytesIO(packb(b"a" * 10, pack_ctrl=pctrl()) + packb([b"a" * 20] * 2, pack_ctrl=pctrl()))
+    unpacker = Unpacker(buff, unpack_ctrl=uctrl(), read_size=1, max_buffer_size=19, max_bin_len=20)
     assert unpacker.unpack() == b"a" * 10
     # assert unpacker.unpack() == [b"a" * 20]*2
     with raises(BufferFull):
@@ -75,7 +75,7 @@ def test_maxbuffersize_file():
 
 
 def test_readbytes():
-    unpacker = Unpacker(unpack_ctrl=uctrl0, read_size=3)
+    unpacker = Unpacker(unpack_ctrl=uctrl(), read_size=3)
     unpacker.feed(b"foobar")
     assert unpacker.unpack() == ord(b"f")
     assert unpacker.read_bytes(3) == b"oob"
@@ -83,14 +83,14 @@ def test_readbytes():
     assert unpacker.unpack() == ord(b"r")
 
     # Test buffer refill
-    unpacker = Unpacker(io.BytesIO(b"foobar"), unpack_ctrl=uctrl0, read_size=3)
+    unpacker = Unpacker(io.BytesIO(b"foobar"), unpack_ctrl=uctrl(), read_size=3)
     assert unpacker.unpack() == ord(b"f")
     assert unpacker.read_bytes(3) == b"oob"
     assert unpacker.unpack() == ord(b"a")
     assert unpacker.unpack() == ord(b"r")
 
     # Issue 352
-    u = Unpacker(unpack_ctrl=uctrl0)
+    u = Unpacker(unpack_ctrl=uctrl())
     u.feed(b"x")
     assert bytes(u.read_bytes(1)) == b"x"
     with raises(StopIteration):
@@ -100,7 +100,7 @@ def test_readbytes():
 
 
 def test_issue124():
-    unpacker = Unpacker(unpack_ctrl=uctrl0)
+    unpacker = Unpacker(unpack_ctrl=uctrl())
     unpacker.feed(b"\xa1?\xa1!")
     assert tuple(unpacker) == ("?", "!")
     assert tuple(unpacker) == ()
@@ -125,10 +125,10 @@ def test_unpack_tell():
     ]
     offsets = []
     for m in messages:
-        pack(m, stream, pack_ctrl=pctrl0)
+        pack(m, stream, pack_ctrl=pctrl())
         offsets.append(stream.tell())
     stream.seek(0)
-    unpacker = Unpacker(stream, unpack_ctrl=uctrl0, strict_map_key=False)
+    unpacker = Unpacker(stream, unpack_ctrl=uctrl(), strict_map_key=False)
     for m, o in zip(messages, offsets):
         m2 = next(unpacker)
         assert m == m2

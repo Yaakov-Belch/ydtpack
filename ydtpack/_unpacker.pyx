@@ -186,7 +186,7 @@ def unpackb(object packed, *,
 
 
 cdef class Unpacker(object):
-    """Streaming unpacker.
+    """Streaming tmsgpack unpacker.
 
     Arguments:
 

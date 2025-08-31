@@ -1,4 +1,4 @@
-from contexts_for_tests import pctrl0, uctrl0
+from contexts_for_tests import pctrl, uctrl
 from collections import namedtuple
 from ydtpack import packb, unpackb
 
@@ -11,8 +11,8 @@ def test_namedtuple():
             return dict(o._asdict())
         raise TypeError(f"Unsupported type {type(o)}")
 
-    packed = packb(T(1, 42), pack_ctrl=pctrl0, strict_types=True, use_bin_type=True, default=default)
-    unpacked = unpackb(packed, unpack_ctrl=uctrl0, raw=False)
+    packed = packb(T(1, 42), pack_ctrl=pctrl(), strict_types=True, use_bin_type=True, default=default)
+    unpacked = unpackb(packed, unpack_ctrl=uctrl(), raw=False)
     assert unpacked == {"foo": 1, "bar": 42}
 
 
@@ -29,8 +29,8 @@ def test_tuple():
             return tuple(o["value"])
         return o
 
-    data = packb(t, pack_ctrl=pctrl0, strict_types=True, use_bin_type=True, default=default)
-    expected = unpackb(data, unpack_ctrl=uctrl0, raw=False, object_hook=convert)
+    data = packb(t, pack_ctrl=pctrl(), strict_types=True, use_bin_type=True, default=default)
+    expected = unpackb(data, unpack_ctrl=uctrl(), raw=False, object_hook=convert)
 
     assert expected == t
 

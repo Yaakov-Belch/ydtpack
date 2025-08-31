@@ -1,4 +1,4 @@
-from contexts_for_tests import pctrl0, uctrl0
+from contexts_for_tests import pctrl, uctrl
 import array
 import ydtpack as ydtpack
 
@@ -11,8 +11,8 @@ def test_overriding_hooks():
 
     obj = {"testval": 1823746192837461928374619}
     refobj = {"testval": default(obj["testval"])}
-    refout = ydtpack.packb(refobj, pack_ctrl=pctrl0)
+    refout = ydtpack.packb(refobj, pack_ctrl=pctrl())
     assert isinstance(refout, (str, bytes))
-    testout = ydtpack.packb(obj, pack_ctrl=pctrl0, default=default)
+    testout = ydtpack.packb(obj, pack_ctrl=pctrl(), default=default)
 
     assert refout == testout
