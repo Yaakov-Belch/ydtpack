@@ -44,9 +44,6 @@ from .exceptions import BufferFull, OutOfData, ExtraData, FormatError, StackErro
 
 from .ext import ExtType, Timestamp
 
-
-EX_CONSTRUCT = 1
-
 TYPE_IMMEDIATE = 0
 TYPE_ARRAY = 1
 TYPE_MAP = 2
@@ -485,34 +482,34 @@ class Unpacker:
             raise FormatError("Unknown header: 0x%x" % b)
         return typ, n, obj
 
-    def _unpack(self, execute=EX_CONSTRUCT):
+    def _unpack(self):
         typ, n, obj = self._read_header()
 
         # TODO should we eliminate the recursion?
         if typ == TYPE_ARRAY:
-            ytype = self._unpack(EX_CONSTRUCT) # <= XXX
+            ytype = self._unpack() # <= XXX
             ret = newlist_hint(n)
             for i in range(n):
-                ret.append(self._unpack(EX_CONSTRUCT))
+                ret.append(self._unpack())
             if self._list_hook is not None:
                 ret = self._list_hook(ret)
             # TODO is the interaction between `list_hook` and `use_list` ok?
             return ret if self._use_list else tuple(ret)
         if typ == TYPE_MAP:
-            ytype = self._unpack(EX_CONSTRUCT) # <= XXX
+            ytype = self._unpack() # <= XXX
             if self._object_pairs_hook is not None:
                 ret = self._object_pairs_hook(
-                    (self._unpack(EX_CONSTRUCT), self._unpack(EX_CONSTRUCT)) for _ in range(n)
+                    (self._unpack(), self._unpack()) for _ in range(n)
                 )
             else:
                 ret = {}
                 for _ in range(n):
-                    key = self._unpack(EX_CONSTRUCT)
+                    key = self._unpack()
                     if self._strict_map_key and type(key) not in (str, bytes):
                         raise ValueError("%s is not allowed for map key" % str(type(key)))
                     if type(key) is str:
                         key = sys.intern(key)
-                    ret[key] = self._unpack(EX_CONSTRUCT)
+                    ret[key] = self._unpack()
                 if self._object_hook is not None:
                     ret = self._object_hook(ret)
             return ret
@@ -545,7 +542,7 @@ class Unpacker:
 
     def __next__(self):
         try:
-            ret = self._unpack(EX_CONSTRUCT)
+            ret = self._unpack()
             self._consume()
             return ret
         except OutOfData:
@@ -558,7 +555,7 @@ class Unpacker:
 
     def unpack(self):
         try:
-            ret = self._unpack(EX_CONSTRUCT)
+            ret = self._unpack()
         except RecursionError:
             raise StackError
         self._consume()
