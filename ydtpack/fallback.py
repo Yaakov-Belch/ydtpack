@@ -502,12 +502,12 @@ class Unpacker:
         # TODO should we eliminate the recursion?
         if typ == TYPE_ARRAY:
             if execute == EX_SKIP:
-                # self._unpack(EX_SKIP)  # <= XXX
+                self._unpack(EX_SKIP)  # <= XXX
                 for i in range(n):
                     # TODO check whether we need to call `list_hook`
                     self._unpack(EX_SKIP)
                 return
-            # ytype = self._unpack(EX_CONSTRUCT) # <= XXX
+            ytype = self._unpack(EX_CONSTRUCT) # <= XXX
             ret = newlist_hint(n)
             for i in range(n):
                 ret.append(self._unpack(EX_CONSTRUCT))
@@ -517,11 +517,13 @@ class Unpacker:
             return ret if self._use_list else tuple(ret)
         if typ == TYPE_MAP:
             if execute == EX_SKIP:
+                self._unpack(EX_SKIP)  # <= XXX
                 for i in range(n):
                     # TODO check whether we need to call hooks
                     self._unpack(EX_SKIP)
                     self._unpack(EX_SKIP)
                 return
+            ytype = self._unpack(EX_CONSTRUCT) # <= XXX
             if self._object_pairs_hook is not None:
                 ret = self._object_pairs_hook(
                     (self._unpack(EX_CONSTRUCT), self._unpack(EX_CONSTRUCT)) for _ in range(n)
@@ -804,7 +806,7 @@ class Packer:
             if check(obj, list_types):
                 n = len(obj)
                 self._pack_array_header(n)
-                # self._pack(None, nest_limit - 1)   # <= XXX-change
+                self._pack(None, nest_limit - 1)   # <= XXX
                 for i in range(n):
                     self._pack(obj[i], nest_limit - 1)
                 return
