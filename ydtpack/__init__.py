@@ -18,26 +18,26 @@ else:
         from .fallback import Packer, unpackb, Unpacker
 
 
-def pack(o, stream, **kwargs):
+def pack(o, stream, pack_ctrl, **kwargs):
     """
     Pack object `o` and write it to `stream`
 
     See :class:`Packer` for options.
     """
-    packer = Packer(**kwargs)
+    packer = Packer(pack_ctrl=pack_ctrl, **kwargs)
     stream.write(packer.pack(o))
 
 
-def packb(o, **kwargs):
+def packb(o, pack_ctrl, **kwargs):
     """
     Pack object `o` and return packed bytes
 
     See :class:`Packer` for options.
     """
-    return Packer(**kwargs).pack(o)
+    return Packer(pack_ctrl=pack_ctrl, **kwargs).pack(o)
 
 
-def unpack(stream, **kwargs):
+def unpack(stream, unpack_ctrl, **kwargs):
     """
     Unpack an object from `stream`.
 
@@ -45,12 +45,6 @@ def unpack(stream, **kwargs):
     See :class:`Unpacker` for options.
     """
     data = stream.read()
-    return unpackb(data, **kwargs)
+    return unpackb(data, unpack_ctrl=unpack_ctrl, **kwargs)
 
 
-# alias for compatibility to simplejson/marshal/pickle.
-load = unpack
-loads = unpackb
-
-dump = pack
-dumps = packb

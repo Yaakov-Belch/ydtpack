@@ -1,10 +1,11 @@
 #!/usr/bin/env python
+from contexts_for_tests import pctrl0, uctrl0
 
 from ydtpack import unpackb
 
 
 def check(src, should, use_list=0, raw=True):
-    assert unpackb(src, use_list=use_list, raw=raw, strict_map_key=False) == should
+    assert unpackb(src, unpack_ctrl=uctrl0, use_list=use_list, raw=raw, strict_map_key=False) == should
 
 
 def testSimpleValue():

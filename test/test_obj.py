@@ -1,38 +1,14 @@
 #!/usr/bin/env python
-
+from contexts_for_tests import pctrl0, uctrl0
 from pytest import raises
 from ydtpack import packb, unpackb
 
-
-def _decode_complex(obj):
-    if b"__complex__" in obj:
-        return complex(obj[b"real"], obj[b"imag"])
-    return obj
-
-
-def _encode_complex(obj):
-    if isinstance(obj, complex):
-        return {b"__complex__": True, b"real": 1, b"imag": 2}
-    return obj
-
-
-def test_encode_hook():
-    packed = packb([3, 1 + 2j], default=_encode_complex)
-    unpacked = unpackb(packed, use_list=1)
-    assert unpacked[1] == {b"__complex__": True, b"real": 1, b"imag": 2}
-
-
-def test_decode_hook():
-    packed = packb([3, {b"__complex__": True, b"real": 1, b"imag": 2}])
-    unpacked = unpackb(packed, object_hook=_decode_complex, use_list=1)
-    assert unpacked[1] == 1 + 2j
-
-
 def test_decode_pairs_hook():
-    packed = packb([3, {1: 2, 3: 4}])
+    packed = packb([3, {1: 2, 3: 4}], pack_ctrl=pctrl0)
     prod_sum = 1 * 2 + 3 * 4
     unpacked = unpackb(
         packed,
+        unpack_ctrl=uctrl0,
         object_pairs_hook=lambda l: sum(k * v for k, v in l),
         use_list=1,
         strict_map_key=False,
@@ -42,13 +18,13 @@ def test_decode_pairs_hook():
 
 def test_only_one_obj_hook():
     with raises(TypeError):
-        unpackb(b"", object_hook=lambda x: x, object_pairs_hook=lambda x: x)
+        unpackb(b"", unpack_ctrl=uctrl0, object_hook=lambda x: x, object_pairs_hook=lambda x: x)
 
 
 def test_bad_hook():
     with raises(TypeError):
-        packed = packb([3, 1 + 2j], default=lambda o: o)
-        unpacked = unpackb(packed, use_list=1)
+        packed = packb([3, 1 + 2j], pack_ctrl=pctrl0, default=lambda o: o)
+        unpacked = unpackb(packed, unpack_ctrl=uctrl0, use_list=1)
 
 
 def _arr_to_str(arr):
@@ -56,8 +32,8 @@ def _arr_to_str(arr):
 
 
 def test_array_hook():
-    packed = packb([1, 2, 3])
-    unpacked = unpackb(packed, list_hook=_arr_to_str, use_list=1)
+    packed = packb([1, 2, 3], pack_ctrl=pctrl0)
+    unpacked = unpackb(packed, unpack_ctrl=uctrl0, list_hook=_arr_to_str, use_list=1)
     assert unpacked == "123"
 
 
@@ -65,17 +41,3 @@ class DecodeError(Exception):
     pass
 
 
-def bad_complex_decoder(o):
-    raise DecodeError("Ooops!")
-
-
-def test_an_exception_in_objecthook1():
-    with raises(DecodeError):
-        packed = packb({1: {"__complex__": True, "real": 1, "imag": 2}})
-        unpackb(packed, object_hook=bad_complex_decoder, strict_map_key=False)
-
-
-def test_an_exception_in_objecthook2():
-    with raises(DecodeError):
-        packed = packb({1: [{"__complex__": True, "real": 1, "imag": 2}]})
-        unpackb(packed, list_hook=bad_complex_decoder, use_list=1, strict_map_key=False)

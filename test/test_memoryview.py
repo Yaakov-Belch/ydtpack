@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from contexts_for_tests import pctrl0, uctrl0
 import pytest
 from array import array
 from ydtpack import packb, unpackb
@@ -20,8 +20,8 @@ def _runtest(format, nbytes, expected_header, expected_prefix, use_bin_type):
     view = memoryview(original_array)
 
     # pack, unpack, and reconstruct array
-    packed = packb(view, use_bin_type=use_bin_type)
-    unpacked = unpackb(packed, raw=(not use_bin_type))
+    packed = packb(view, pack_ctrl=pctrl0, use_bin_type=use_bin_type)
+    unpacked = unpackb(packed, unpack_ctrl=uctrl0, raw=(not use_bin_type))
     reconstructed_array = make_array(format, unpacked)
 
     # check that we got the right amount of data
@@ -96,5 +96,5 @@ def test_multidim_memoryview():
     # See https://github.com/ydtpack/ydtpack-python/issues/526
     view = memoryview(b"\00" * 6)
     data = view.cast(view.format, (3, 2))
-    packed = packb(data)
+    packed = packb(data, pack_ctrl=pctrl0)
     assert packed == b'\xc4\x06\x00\x00\x00\x00\x00\x00'

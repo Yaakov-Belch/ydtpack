@@ -52,7 +52,6 @@ TYPE_EXT = 5
 
 DEFAULT_RECURSE_LIMIT = 511
 
-
 def _check_type_strict(obj, t, type=type, tuple=tuple):
     if type(t) is tuple:
         return type(obj) in t
@@ -129,6 +128,9 @@ class Unpacker:
     """Streaming unpacker.
 
     Arguments:
+
+    :param unpack_ctrl:
+        Unpack control context.
 
     :param file_like:
         File-like object having `.read(n)` method.
@@ -224,6 +226,7 @@ class Unpacker:
     def __init__(
         self,
         file_like=None,
+        unpack_ctrl=None,
         read_size=0,
         use_list=True,
         raw=False,
@@ -241,6 +244,9 @@ class Unpacker:
         max_map_len=-1,
         max_ext_len=-1,
     ):
+        if unpack_ctrl is None:
+            raise ValueError("No unpack_ctrl supplied.")
+
         if unicode_errors is None:
             unicode_errors = "strict"
 
@@ -576,6 +582,9 @@ class Packer:
 
     Packer's constructor has some keyword arguments:
 
+    :param pack_ctrl:
+        Pack control context.
+
     :param callable default:
         Convert user type to builtin type that Packer supports.
         See also simplejson's document.
@@ -637,6 +646,7 @@ class Packer:
 
     def __init__(
         self,
+        pack_ctrl=None,
         default=None,
         use_single_float=False,
         autoreset=True,
@@ -646,6 +656,8 @@ class Packer:
         unicode_errors=None,
         sort_keys=False,
     ):
+        if pack_ctrl is None:
+           raise(ValueError("No pack_ctrl supplied."))
         self._strict_types = strict_types
         self._use_float = use_single_float
         self._autoreset = autoreset

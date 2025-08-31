@@ -1,3 +1,4 @@
+from contexts_for_tests import pctrl0, uctrl0
 import array
 import ydtpack as ydtpack
 from ydtpack import ExtType
@@ -5,7 +6,7 @@ from ydtpack import ExtType
 
 def test_pack_ext_type():
     def p(s):
-        packer = ydtpack.Packer()
+        packer = ydtpack.Packer(pack_ctrl=pctrl0)
         packer.pack_ext_type(0x42, s)
         return packer.bytes()
 
@@ -21,7 +22,7 @@ def test_pack_ext_type():
 
 def test_unpack_ext_type():
     def check(b, expected):
-        assert ydtpack.unpackb(b) == expected
+        assert ydtpack.unpackb(b, unpack_ctrl=uctrl0) == expected
 
     check(b"\xd4\x42A", ExtType(0x42, b"A"))  # fixext 1
     check(b"\xd5\x42AB", ExtType(0x42, b"AB"))  # fixext 2
@@ -56,8 +57,8 @@ def test_extension_type():
         return obj
 
     obj = [42, b"hello", array.array("d", [1.1, 2.2, 3.3])]
-    s = ydtpack.packb(obj, default=default)
-    obj2 = ydtpack.unpackb(s, ext_hook=ext_hook)
+    s = ydtpack.packb(obj, pack_ctrl=pctrl0, default=default)
+    obj2 = ydtpack.unpackb(s, unpack_ctrl=uctrl0, ext_hook=ext_hook)
     assert obj == obj2
 
 
@@ -70,8 +71,8 @@ def test_overriding_hooks():
 
     obj = {"testval": 1823746192837461928374619}
     refobj = {"testval": default(obj["testval"])}
-    refout = ydtpack.packb(refobj)
+    refout = ydtpack.packb(refobj, pack_ctrl=pctrl0)
     assert isinstance(refout, (str, bytes))
-    testout = ydtpack.packb(obj, default=default)
+    testout = ydtpack.packb(obj, pack_ctrl=pctrl0, default=default)
 
     assert refout == testout

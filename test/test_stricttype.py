@@ -1,3 +1,4 @@
+from contexts_for_tests import pctrl0, uctrl0
 from collections import namedtuple
 from ydtpack import packb, unpackb, ExtType
 
@@ -10,8 +11,8 @@ def test_namedtuple():
             return dict(o._asdict())
         raise TypeError(f"Unsupported type {type(o)}")
 
-    packed = packb(T(1, 42), strict_types=True, use_bin_type=True, default=default)
-    unpacked = unpackb(packed, raw=False)
+    packed = packb(T(1, 42), pack_ctrl=pctrl0, strict_types=True, use_bin_type=True, default=default)
+    unpacked = unpackb(packed, unpack_ctrl=uctrl0, raw=False)
     assert unpacked == {"foo": 1, "bar": 42}
 
 
@@ -28,8 +29,8 @@ def test_tuple():
             return tuple(o["value"])
         return o
 
-    data = packb(t, strict_types=True, use_bin_type=True, default=default)
-    expected = unpackb(data, raw=False, object_hook=convert)
+    data = packb(t, pack_ctrl=pctrl0, strict_types=True, use_bin_type=True, default=default)
+    expected = unpackb(data, unpack_ctrl=uctrl0, raw=False, object_hook=convert)
 
     assert expected == t
 
@@ -42,17 +43,17 @@ def test_tuple_ext():
     def default(o):
         if isinstance(o, tuple):
             # Convert to list and pack
-            payload = packb(list(o), strict_types=True, use_bin_type=True, default=default)
+            payload = packb(list(o), pack_ctrl=pctrl0, strict_types=True, use_bin_type=True, default=default)
             return ExtType(MSGPACK_EXT_TYPE_TUPLE, payload)
         raise TypeError(repr(o))
 
     def convert(code, payload):
         if code == MSGPACK_EXT_TYPE_TUPLE:
             # Unpack and convert to tuple
-            return tuple(unpackb(payload, raw=False, ext_hook=convert))
+            return tuple(unpackb(payload, unpack_ctrl=uctrl0, raw=False, ext_hook=convert))
         raise ValueError(f"Unknown Ext code {code}")
 
-    data = packb(t, strict_types=True, use_bin_type=True, default=default)
-    expected = unpackb(data, raw=False, ext_hook=convert)
+    data = packb(t, pack_ctrl=pctrl0, strict_types=True, use_bin_type=True, default=default)
+    expected = unpackb(data, unpack_ctrl=uctrl0, raw=False, ext_hook=convert)
 
     assert expected == t

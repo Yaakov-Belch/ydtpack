@@ -21,7 +21,6 @@ from .ext import ExtType, Timestamp
 
 cdef object giga = 1_000_000_000
 
-
 cdef extern from "unpack.h":
     ctypedef struct ydtpack_user:
         bint use_list
@@ -31,6 +30,10 @@ cdef extern from "unpack.h":
         int timestamp
         PyObject* object_hook
         PyObject* list_hook
+
+        # PyObject* from_map;     # obsolete
+        # PyObject* from_array;   # obsolete
+
         PyObject* ext_hook
         PyObject* timestamp_t
         PyObject *giga;
@@ -41,6 +44,7 @@ cdef extern from "unpack.h":
         Py_ssize_t max_array_len
         Py_ssize_t max_map_len
         Py_ssize_t max_ext_len
+
 
     ctypedef struct unpack_context:
         ydtpack_user user
@@ -68,6 +72,12 @@ cdef inline init_ctx(unpack_context *ctx,
     ctx.user.raw = raw
     ctx.user.strict_map_key = strict_map_key
     ctx.user.object_hook = ctx.user.list_hook = <PyObject*>NULL
+
+    # Py_INCREF(unpack_ctrl.from_map)                           # obsolete
+    # ctx.user.from_map   = <PyObject*>unpack_ctrl.from_map     # obsolete
+    # Py_INCREF(unpack_ctrl.from_array)                         # obsolete
+    # ctx.user.from_array = <PyObject*>unpack_ctrl.from_array   # obsolete
+
     ctx.user.max_str_len = max_str_len
     ctx.user.max_bin_len = max_bin_len
     ctx.user.max_array_len = max_array_len
@@ -137,7 +147,9 @@ cdef inline int get_data_from_buffer(object obj,
     return 1
 
 
-def unpackb(object packed, *, object object_hook=None, object list_hook=None,
+def unpackb(object packed, *,
+            object unpack_ctrl=None,
+            object object_hook=None, object list_hook=None,
             bint use_list=True, bint raw=False, int timestamp=0, bint strict_map_key=True,
             unicode_errors=None,
             object_pairs_hook=None, ext_hook=ExtType,
@@ -167,6 +179,9 @@ def unpackb(object packed, *, object object_hook=None, object list_hook=None,
     cdef char* buf = NULL
     cdef Py_ssize_t buf_len
     cdef const char* cerr = NULL
+
+    if unpack_ctrl is None:
+        raise(ValueError("No unpack_ctrl supplied."))
 
     if unicode_errors is not None:
         cerr = unicode_errors
@@ -211,6 +226,9 @@ cdef class Unpacker(object):
     """Streaming unpacker.
 
     Arguments:
+
+    :param unpack_ctrl:
+        Unpack control context.
 
     :param file_like:
         File-like object having `.read(n)` method.
@@ -321,7 +339,9 @@ cdef class Unpacker(object):
         PyMem_Free(self.buf)
         self.buf = NULL
 
-    def __init__(self, file_like=None, *, Py_ssize_t read_size=0,
+    def __init__(self, file_like=None, *,
+                 object unpack_ctrl=None,
+                 Py_ssize_t read_size=0,
                  bint use_list=True, bint raw=False, int timestamp=0, bint strict_map_key=True,
                  object object_hook=None, object object_pairs_hook=None, object list_hook=None,
                  unicode_errors=None, Py_ssize_t max_buffer_size=100*1024*1024,
@@ -332,6 +352,9 @@ cdef class Unpacker(object):
                  Py_ssize_t max_map_len=-1,
                  Py_ssize_t max_ext_len=-1):
         cdef const char *cerr=NULL
+
+        if unpack_ctrl is None:
+           raise(ValueError("No unpack_ctrl supplied."))
 
         self.object_hook = object_hook
         self.object_pairs_hook = object_pairs_hook

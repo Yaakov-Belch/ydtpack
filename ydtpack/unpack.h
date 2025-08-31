@@ -27,6 +27,10 @@ typedef struct unpack_user {
     int timestamp;
     PyObject *object_hook;
     PyObject *list_hook;
+
+    // PyObject* from_map;     # obsolete
+    // PyObject* from_array;   # obsolete
+
     PyObject *ext_hook;
     PyObject *timestamp_t;
     PyObject *giga;

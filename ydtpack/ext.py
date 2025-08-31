@@ -3,7 +3,7 @@ import datetime
 import sys
 import struct
 
-
+# obsolete
 class ExtType(namedtuple("ExtType", "code data")):
     """ExtType represents ext type in ydtpack."""
 
@@ -16,7 +16,7 @@ class ExtType(namedtuple("ExtType", "code data")):
             raise ValueError("code must be 0~127")
         return super().__new__(cls, code, data)
 
-
+# obsolete
 class Timestamp:
     """Timestamp represents the Timestamp extension type in ydtpack.
 

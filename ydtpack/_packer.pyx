@@ -7,9 +7,10 @@ from cpython.datetime cimport (
     datetime_tzinfo, timedelta_days, timedelta_seconds, timedelta_microseconds,
 )
 
+
+# obsolete
 cdef ExtType
 cdef Timestamp
-
 from .ext import ExtType, Timestamp
 
 
@@ -71,6 +72,9 @@ cdef class Packer(object):
 
     Packer's constructor has some keyword arguments:
 
+    :param object pack_ctrl:
+        Pack control context.
+
     :param callable default:
         Convert user type to builtin type that Packer supports.
         See also simplejson's document.
@@ -124,10 +128,15 @@ cdef class Packer(object):
         self.pk.buf_size = buf_size
         self.pk.length = 0
 
-    def __init__(self, *, default=None,
+    def __init__(self, *,
+                 object pack_ctrl, default=None,
                  bint use_single_float=False, bint autoreset=True, bint use_bin_type=True,
                  bint strict_types=False, bint datetime=False, unicode_errors=None,
                  bool sort_keys=False):
+
+        if pack_ctrl is None:
+           raise(ValueError("No pack_ctrl supplied."))
+
         self.use_float = use_single_float
         self.strict_types = strict_types
         self.autoreset = autoreset
