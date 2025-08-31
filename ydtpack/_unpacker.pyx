@@ -112,17 +112,8 @@ cdef inline int get_data_from_buffer(object obj,
     return 1
 
 
-def unpackb(object packed, *,
-            object unpack_ctrl=None,
-            object object_hook=None, object list_hook=None,
-            #bint use_list=True, bint raw=False, bint strict_map_key=True, # obsolete...
-            #unicode_errors=None,
-            #object_as_pairs=False,
-            #Py_ssize_t max_str_len=-1,
-            #Py_ssize_t max_bin_len=-1,
-            #Py_ssize_t max_array_len=-1,
-            #Py_ssize_t max_map_len=-1
-            ):
+def unpackb(object packed, *, object unpack_ctrl=None,
+            object object_hook=None, object list_hook=None): # obsolete hooks
     """
     Unpack packed_bytes to object. Returns an unpacked object.
 
@@ -254,16 +245,7 @@ cdef class Unpacker(object):
     def __init__(self, file_like=None, *,
                  object unpack_ctrl=None,
                  object object_hook=None, object list_hook=None,
-                 Py_ssize_t buffer_size=0
-                 #Py_ssize_t read_size=0,
-                 #bint use_list=True, bint raw=False, bint strict_map_key=True,
-                 #bint object_as_pairs=False,
-                 #unicode_errors=None, Py_ssize_t max_buffer_size=100*1024*1024,
-                 #Py_ssize_t max_str_len=-1,
-                 #Py_ssize_t max_bin_len=-1,
-                 #Py_ssize_t max_array_len=-1,
-                 #Py_ssize_t max_map_len=-1
-                ):
+                 Py_ssize_t buffer_size=0):
         cdef const char *cerr=NULL
 
         if unpack_ctrl is None:
