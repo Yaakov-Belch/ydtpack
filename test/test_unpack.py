@@ -10,34 +10,6 @@ except ImportError:
     pass
 
 
-@mark.skipif(
-    "not hasattr(sys, 'getrefcount') == True",
-    reason="sys.getrefcount() is needed to pass this test",
-)
-def test_unpacker_hook_refcnt():
-    result = []
-
-    def hook(x):
-        result.append(x)
-        return x
-
-    basecnt = sys.getrefcount(hook)
-
-    up = Unpacker(unpack_ctrl=uctrl(), object_hook=hook, list_hook=hook)
-
-    assert sys.getrefcount(hook) >= basecnt + 2
-
-    up.feed(packb([{}], pack_ctrl=pctrl()))
-    up.feed(packb([{}], pack_ctrl=pctrl()))
-    assert up.unpack() == [{}]
-    assert up.unpack() == [{}]
-    assert result == [{}, [{}], {}, [{}]]
-
-    del up
-
-    assert sys.getrefcount(hook) == basecnt
-
-
 def test_unpacker_tell():
     objects = 1, 2, "abc", "def", "ghi"
     packed = b"\x01\x02\xa3abc\xa3def\xa3ghi"

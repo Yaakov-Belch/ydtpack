@@ -138,13 +138,6 @@ class Unpacker:
     :param buffer_size:
         Set the buffer_size.
 
-    :param callable object_hook:
-        When specified, it should be callable.
-        Unpacker calls it with a dict argument after unpacking ydtpack map.
-
-    :param callable list_hook:
-        This will be removed soon.  obsolete
-
     Example of streaming deserialize from file-like object::
 
         unpacker = Unpacker(file_like)
@@ -174,8 +167,6 @@ class Unpacker:
         file_like=None,
         unpack_ctrl=None,
         buffer_size=0,
-        object_hook=None,
-        list_hook=None,
     ):
         if unpack_ctrl is None:
             raise ValueError("No unpack_ctrl supplied.")
@@ -222,15 +213,7 @@ class Unpacker:
         self._max_array_len = o.max_array_len
         self._max_map_len   = o.max_map_len
 
-        self._list_hook = list_hook
-        self._object_hook = object_hook
-
         self._stream_offset = 0
-
-        if list_hook is not None and not callable(list_hook):
-            raise TypeError("`list_hook` is not callable")
-        if object_hook is not None and not callable(object_hook):
-            raise TypeError("`object_hook` is not callable")
 
     def feed(self, next_bytes):
         assert self._feeding
@@ -404,9 +387,6 @@ class Unpacker:
             if not self._use_list:
                 ret = tuple(ret)
             ret = self.from_array(object_type, ret)
-            if self._list_hook is not None:  # obsolete
-                ret = self._list_hook(ret)
-            # TODO is the interaction between `list_hook` and `use_list` ok?
             return ret
         if typ == TYPE_MAP:
             object_type = self._unpack() # <= XXX
@@ -422,8 +402,6 @@ class Unpacker:
                         key = sys.intern(key)
                     ret[key] = self._unpack()
                 ret = self.from_map(object_type, ret)
-                if self._object_hook is not None: # obsolete
-                    ret = self._object_hook(ret)
             return ret
         if typ == TYPE_RAW:
             if self._raw:

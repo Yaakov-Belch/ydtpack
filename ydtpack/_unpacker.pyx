@@ -25,8 +25,6 @@ cdef extern from "unpack.h":
         bint raw
         bint object_as_pairs
         bint strict_map_key
-        PyObject* object_hook
-        PyObject* list_hook
 
         PyObject* from_map;
         PyObject* from_array;
@@ -52,8 +50,7 @@ cdef extern from "unpack.h":
 
 cdef inline init_ctx(unpack_context *ctx,
                      object from_map, object from_array,
-                     object object_hook, bint object_as_pairs,
-                     object list_hook,
+                     bint object_as_pairs,
                      bint use_list, bint raw,
                      bint strict_map_key,
                      const char* unicode_errors,
@@ -63,7 +60,6 @@ cdef inline init_ctx(unpack_context *ctx,
     ctx.user.use_list = use_list
     ctx.user.raw = raw
     ctx.user.strict_map_key = strict_map_key
-    ctx.user.object_hook = ctx.user.list_hook = <PyObject*>NULL
 
     ctx.user.from_map   = <PyObject*>from_map
     ctx.user.from_array = <PyObject*>from_array
@@ -73,17 +69,7 @@ cdef inline init_ctx(unpack_context *ctx,
     ctx.user.max_array_len = max_array_len
     ctx.user.max_map_len = max_map_len
 
-    if object_hook is not None:
-        if not PyCallable_Check(object_hook):
-            raise TypeError("object_hook must be a callable.")
-        ctx.user.object_hook = <PyObject*>object_hook
-
     ctx.user.object_as_pairs = object_as_pairs
-
-    if list_hook is not None:
-        if not PyCallable_Check(list_hook):
-            raise TypeError("list_hook must be a callable.")
-        ctx.user.list_hook = <PyObject*>list_hook
 
     ctx.user.giga = <PyObject*>giga
     ctx.user.unicode_errors = unicode_errors
@@ -112,8 +98,7 @@ cdef inline int get_data_from_buffer(object obj,
     return 1
 
 
-def unpackb(object packed, *, object unpack_ctrl=None,
-            object object_hook=None, object list_hook=None): # obsolete hooks
+def unpackb(object packed, *, object unpack_ctrl=None):
     """
     Unpack packed_bytes to object. Returns an unpacked object.
 
@@ -149,7 +134,7 @@ def unpackb(object packed, *, object unpack_ctrl=None,
     get_data_from_buffer(packed, &view, &buf, &buf_len)
 
     try:
-        init_ctx(&ctx, from_map, from_array, object_hook, o.object_as_pairs, list_hook,
+        init_ctx(&ctx, from_map, from_array, o.object_as_pairs,
                  o.use_list, o.raw, o.strict_map_key, cerr,
                  min(buf_len, o.max_str_len),
                  min(buf_len, o.max_bin_len),
@@ -189,13 +174,6 @@ cdef class Unpacker(object):
     :param buffer_size:
         Set the buffer_size directly.
 
-    :param callable object_hook:
-        When specified, it should be callable. obsolete.
-        Unpacker calls it with a dict argument after unpacking ydtpack map.
-
-    :param callable list_hook:
-        obsolete.
-
     Example of streaming deserialize from file-like object::
 
         unpacker = Unpacker(file_like)
@@ -228,8 +206,6 @@ cdef class Unpacker(object):
     # To maintain refcnt.
     cdef object from_map
     cdef object from_array
-    cdef object object_hook
-    cdef object list_hook
     cdef bint object_as_pairs
     cdef object unicode_errors
     cdef Py_ssize_t max_buffer_size
@@ -242,10 +218,9 @@ cdef class Unpacker(object):
         PyMem_Free(self.buf)
         self.buf = NULL
 
-    def __init__(self, file_like=None, *,
-                 object unpack_ctrl=None,
-                 object object_hook=None, object list_hook=None,
-                 Py_ssize_t buffer_size=0):
+    def __init__(
+        self, file_like=None, *, object unpack_ctrl=None, Py_ssize_t buffer_size=0,
+    ):
         cdef const char *cerr=NULL
 
         if unpack_ctrl is None:
@@ -253,8 +228,6 @@ cdef class Unpacker(object):
 
         self.from_map   = unpack_ctrl.from_map
         self.from_array = unpack_ctrl.from_array
-        self.object_hook = object_hook            # obsolete
-        self.list_hook   = list_hook              # obsolete
 
         self.file_like = file_like
         if file_like:
@@ -282,7 +255,7 @@ cdef class Unpacker(object):
 
         init_ctx(&self.ctx,
                  self.from_map, self.from_array,
-                 object_hook, o.object_as_pairs, list_hook,
+                 o.object_as_pairs,
                  o.use_list, o.raw, o.strict_map_key, <const char*>cerr,
                  o.max_str_len, o.max_bin_len, o.max_array_len, o.max_map_len)
 

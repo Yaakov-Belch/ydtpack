@@ -24,8 +24,6 @@ typedef struct unpack_user {
     bool raw;
     bool object_as_pairs;
     bool strict_map_key;
-    PyObject *object_hook;
-    PyObject *list_hook;
 
     PyObject* from_map;
     PyObject* from_array;
@@ -171,13 +169,6 @@ static inline int unpack_callback_array_end(
     Py_DECREF(*c);
     *c = new_c;
 
-    if (u->list_hook) { // obsolete
-        PyObject *new_c = PyObject_CallFunctionObjArgs(u->list_hook, *c, NULL);
-        if (!new_c)
-            return -1;
-        Py_DECREF(*c);
-        *c = new_c;
-    }
     return 0;
 }
 
@@ -238,14 +229,6 @@ static inline int unpack_callback_map_end(
     Py_DECREF(*c);
     *c = new_c;
 
-    if (u->object_hook) {  // obsolete
-        PyObject *new_c = PyObject_CallFunctionObjArgs(u->object_hook, *c, NULL);
-        if (!new_c)
-            return -1;
-
-        Py_DECREF(*c);
-        *c = new_c;
-    }
     return 0;
 }
 
