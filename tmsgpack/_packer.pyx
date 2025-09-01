@@ -61,13 +61,8 @@ cdef class Packer(object):
 
     :param object pack_ctrl:
         Pack control context.
-
-    :param callable default:
-        Convert user type to builtin type that Packer supports.
-        See also simplejson's document.
     """
     cdef tmsgpack_packer pk
-    cdef object _default
     cdef object _berrors
     cdef const char *unicode_errors
     cdef bint tuple_as_list
@@ -83,7 +78,7 @@ cdef class Packer(object):
         self.pk.buf_size = buf_size
         self.pk.length = 0
 
-    def __init__(self, *, object pack_ctrl, default=None):
+    def __init__(self, *, object pack_ctrl):
         if pack_ctrl is None:
            raise(ValueError("No pack_ctrl supplied."))
 
@@ -93,10 +88,6 @@ cdef class Packer(object):
         self.tuple_as_list   = o.tuple_as_list
         self.strict_types    = o.strict_types
         self.pk.use_bin_type = o.use_bin_type
-        if default is not None:
-            if not PyCallable_Check(default):
-                raise TypeError("default must be a callable.")
-        self._default = default
 
         self._berrors = o.unicode_errors
         if o.unicode_errors is None:
@@ -121,7 +112,6 @@ cdef class Packer(object):
         cdef int ret
         cdef dict d
         cdef Py_ssize_t L
-        cdef int default_used = 0
         cdef bint strict_types = self.strict_types
         cdef Py_buffer view
         cdef tuple_as_list = self.tuple_as_list
@@ -147,12 +137,7 @@ cdef class Packer(object):
                         llval = o
                         ret = tmsgpack_pack_long_long(&self.pk, llval)
                 except OverflowError as oe:
-                    if not default_used and self._default is not None:
-                        o = self._default(o)
-                        default_used = True
-                        continue
-                    else:
-                        raise OverflowError("Integer value out of range")
+                    raise OverflowError("Integer value out of range")
             elif PyInt_CheckExact(o) if strict_types else PyInt_Check(o):
                 longval = o
                 ret = tmsgpack_pack_long(&self.pk, longval)
@@ -222,10 +207,6 @@ cdef class Packer(object):
                 if ret == 0:
                     ret = tmsgpack_pack_raw_body(&self.pk, <char*>view.buf, L)
                 PyBuffer_Release(&view);
-            elif not default_used and self._default:
-                o = self._default(o)
-                default_used = 1
-                continue
             else:
                 PyErr_Format(TypeError, b"can not serialize '%.200s' object", Py_TYPE(o).tp_name)
             return ret

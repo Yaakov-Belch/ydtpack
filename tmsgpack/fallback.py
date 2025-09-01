@@ -452,10 +452,6 @@ class Packer:
     :param pack_ctrl:
         Pack control context.
 
-    :param callable default:
-        Convert user type to builtin type that Packer supports.
-        See also simplejson's document.
-
     Example of streaming deserialize from file-like object::
 
         unpacker = Unpacker(file_like)
@@ -483,7 +479,6 @@ class Packer:
     def __init__(
         self,
         pack_ctrl=None,
-        default=None,
     ):
         if pack_ctrl is None:
            raise(ValueError("No pack_ctrl supplied."))
@@ -497,11 +492,6 @@ class Packer:
         self._unicode_errors = o.unicode_errors
         self._sort_keys = o.sort_keys
 
-        if default is not None:
-            if not callable(default):
-                raise TypeError("default must be callable")
-        self._default = default
-
     def _pack(
         self,
         obj,
@@ -510,7 +500,6 @@ class Packer:
         check_type_strict=_check_type_strict,
     ):
         list_types = self._list_types
-        default_used = False
         if self._strict_types:
             check = check_type_strict
         while True:
@@ -543,10 +532,6 @@ class Packer:
                     return self._buffer.write(struct.pack(">BQ", 0xCF, obj))
                 if -0x8000000000000000 <= obj < -0x80000000:
                     return self._buffer.write(struct.pack(">Bq", 0xD3, obj))
-                if not default_used and self._default is not None:
-                    obj = self._default(obj)
-                    default_used = True
-                    continue
                 raise OverflowError("Integer value out of range")
             if check(obj, (bytes, bytearray)):
                 n = len(obj)
@@ -581,11 +566,6 @@ class Packer:
             if type(obj) is dict:
                 _items = sorted(obj.items()) if self._sort_keys else obj.items()
                 return self._pack_dict_pairs(len(obj), None, _items, nest_limit - 1)
-
-            if not default_used and self._default is not None:
-                obj = self._default(obj)
-                default_used = 1
-                continue
 
             raise TypeError(f"Cannot serialize {obj!r}")
 
