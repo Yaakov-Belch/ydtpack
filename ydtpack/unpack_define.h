@@ -72,8 +72,8 @@ typedef enum {
     CS_RAW_32            = 0x1b,
     CS_ARRAY_16          = 0x1c,
     CS_ARRAY_32          = 0x1d,
-    CS_MAP_16            = 0x1e,
-    CS_MAP_32            = 0x1f,
+    CS_DICT_16           = 0x1e,
+    CS_DICT_32           = 0x1f,
 
     ACS_RAW_VALUE,
     ACS_BIN_VALUE,
@@ -82,8 +82,8 @@ typedef enum {
 
 typedef enum {
     CT_CONTAINER_TYPE,
-    CT_MAP_KEY,
-    CT_MAP_VALUE,
+    CT_DICT_KEY,
+    CT_DICT_VALUE,
     CT_ARRAY_ITEM,
 } ydtpack_container_type;
 

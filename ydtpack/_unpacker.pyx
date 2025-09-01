@@ -24,9 +24,9 @@ cdef extern from "unpack.h":
         bint use_list
         bint raw
         bint object_as_pairs
-        bint strict_map_key
+        bint strict_dict_key
 
-        PyObject* from_map;
+        PyObject* from_dict;
         PyObject* from_array;
 
         PyObject *giga;
@@ -34,7 +34,7 @@ cdef extern from "unpack.h":
         Py_ssize_t max_str_len
         Py_ssize_t max_bin_len
         Py_ssize_t max_array_len
-        Py_ssize_t max_map_len
+        Py_ssize_t max_dict_len
 
     ctypedef struct unpack_context:
         ydtpack_user user
@@ -49,25 +49,25 @@ cdef extern from "unpack.h":
     void unpack_clear(unpack_context* ctx)
 
 cdef inline init_ctx(unpack_context *ctx,
-                     object from_map, object from_array,
+                     object from_dict, object from_array,
                      bint object_as_pairs,
                      bint use_list, bint raw,
-                     bint strict_map_key,
+                     bint strict_dict_key,
                      const char* unicode_errors,
                      Py_ssize_t max_str_len, Py_ssize_t max_bin_len,
-                     Py_ssize_t max_array_len, Py_ssize_t max_map_len):
+                     Py_ssize_t max_array_len, Py_ssize_t max_dict_len):
     unpack_init(ctx)
     ctx.user.use_list = use_list
     ctx.user.raw = raw
-    ctx.user.strict_map_key = strict_map_key
+    ctx.user.strict_dict_key = strict_dict_key
 
-    ctx.user.from_map   = <PyObject*>from_map
+    ctx.user.from_dict   = <PyObject*>from_dict
     ctx.user.from_array = <PyObject*>from_array
 
     ctx.user.max_str_len = max_str_len
     ctx.user.max_bin_len = max_bin_len
     ctx.user.max_array_len = max_array_len
-    ctx.user.max_map_len = max_map_len
+    ctx.user.max_dict_len = max_dict_len
 
     ctx.user.object_as_pairs = object_as_pairs
 
@@ -124,7 +124,7 @@ def unpackb(object packed, *, object unpack_ctrl=None):
     if unpack_ctrl is None:
         raise(ValueError("No unpack_ctrl supplied."))
 
-    cdef from_map   = unpack_ctrl.from_map
+    cdef from_dict   = unpack_ctrl.from_dict
     cdef from_array = unpack_ctrl.from_array
 
     o = unpack_ctrl.options
@@ -134,12 +134,12 @@ def unpackb(object packed, *, object unpack_ctrl=None):
     get_data_from_buffer(packed, &view, &buf, &buf_len)
 
     try:
-        init_ctx(&ctx, from_map, from_array, o.object_as_pairs,
-                 o.use_list, o.raw, o.strict_map_key, cerr,
+        init_ctx(&ctx, from_dict, from_array, o.object_as_pairs,
+                 o.use_list, o.raw, o.strict_dict_key, cerr,
                  min(buf_len, o.max_str_len),
                  min(buf_len, o.max_bin_len),
                  min(buf_len, o.max_array_len),
-                 min(buf_len, o.max_map_len))
+                 min(buf_len, o.max_dict_len))
         ret = unpack_construct(&ctx, buf, buf_len, &off)
     finally:
         PyBuffer_Release(&view);
@@ -204,7 +204,7 @@ cdef class Unpacker(object):
     cdef object file_like_read
     cdef Py_ssize_t read_size
     # To maintain refcnt.
-    cdef object from_map
+    cdef object from_dict
     cdef object from_array
     cdef bint object_as_pairs
     cdef object unicode_errors
@@ -226,7 +226,7 @@ cdef class Unpacker(object):
         if unpack_ctrl is None:
            raise(ValueError("No unpack_ctrl supplied."))
 
-        self.from_map   = unpack_ctrl.from_map
+        self.from_dict  = unpack_ctrl.from_dict
         self.from_array = unpack_ctrl.from_array
 
         self.file_like = file_like
@@ -254,10 +254,10 @@ cdef class Unpacker(object):
             cerr = self.unicode_errors = o.unicode_errors
 
         init_ctx(&self.ctx,
-                 self.from_map, self.from_array,
+                 self.from_dict, self.from_array,
                  o.object_as_pairs,
-                 o.use_list, o.raw, o.strict_map_key, <const char*>cerr,
-                 o.max_str_len, o.max_bin_len, o.max_array_len, o.max_map_len)
+                 o.use_list, o.raw, o.strict_dict_key, <const char*>cerr,
+                 o.max_str_len, o.max_bin_len, o.max_array_len, o.max_dict_len)
 
     def feed(self, object next_bytes):
         """Append `next_bytes` to internal buffer."""

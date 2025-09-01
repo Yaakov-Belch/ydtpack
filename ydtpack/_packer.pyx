@@ -26,7 +26,7 @@ cdef extern from "pack.h":
     int ydtpack_pack_float(ydtpack_packer* pk, float d)
     int ydtpack_pack_double(ydtpack_packer* pk, double d)
     int ydtpack_pack_array(ydtpack_packer* pk, size_t l)
-    int ydtpack_pack_map(ydtpack_packer* pk, size_t l)
+    int ydtpack_pack_dict(ydtpack_packer* pk, size_t l)
     int ydtpack_pack_raw(ydtpack_packer* pk, size_t l)
     int ydtpack_pack_bin(ydtpack_packer* pk, size_t l)
     int ydtpack_pack_raw_body(ydtpack_packer* pk, char* body, size_t l)
@@ -187,7 +187,7 @@ cdef class Packer(object):
                 L = len(d)
                 if L > ITEM_LIMIT:
                     raise ValueError("dict is too large")
-                ret = ydtpack_pack_map(&self.pk, L)
+                ret = ydtpack_pack_dict(&self.pk, L)
                 if ret != 0: return ret                 #    XXX
                 ret = self._pack(None, nest_limit-1)    # <= XXX
                 if ret == 0:
@@ -201,7 +201,7 @@ cdef class Packer(object):
                 L = len(o)
                 if L > ITEM_LIMIT:
                     raise ValueError("dict is too large")
-                ret = ydtpack_pack_map(&self.pk, L)
+                ret = ydtpack_pack_dict(&self.pk, L)
                 if ret != 0: return ret                 #    XXX
                 ret = self._pack(None, nest_limit-1)    # <= XXX
                 if ret == 0:
@@ -266,10 +266,10 @@ cdef class Packer(object):
         self.pk.length = 0
         return buf
 
-    def pack_map_header(self, long long size):
+    def pack_dict_header(self, long long size):
         if size > ITEM_LIMIT:
             raise ValueError
-        cdef int ret = ydtpack_pack_map(&self.pk, size)
+        cdef int ret = ydtpack_pack_dict(&self.pk, size)
         if ret == -1:
             raise MemoryError
         elif ret:  # should not happen
@@ -278,14 +278,14 @@ cdef class Packer(object):
         self.pk.length = 0
         return buf
 
-    def pack_map_pairs(self, object object_type, object pairs):
+    def pack_dict_pairs(self, object object_type, object pairs):
         """
-        Pack *pairs* as ydtpack map type.
+        Pack *pairs* as ydtpack dict type.
 
         *pairs* should be a sequence of pairs.
         (`len(pairs)` and `for k, v in pairs:` should be supported.)
         """
-        cdef int ret = ydtpack_pack_map(&self.pk, len(pairs))
+        cdef int ret = ydtpack_pack_dict(&self.pk, len(pairs))
         if ret == 0:
             ret = self._pack(object_type)
         if ret == 0:

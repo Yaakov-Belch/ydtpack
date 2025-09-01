@@ -12,7 +12,7 @@ from ydtpack import packb, unpackb, Unpacker, Packer, pack
 
 
 def check(data, use_list=False):
-    re = unpackb(packb(data, pack_ctrl=pctrl()), unpack_ctrl=uctrl(use_list=use_list, strict_map_key=False))
+    re = unpackb(packb(data, pack_ctrl=pctrl()), unpack_ctrl=uctrl(use_list=use_list, strict_dict_key=False))
     assert re == data
 
 
@@ -123,18 +123,18 @@ def testArraySize(sizes=[0, 5, 50, 1000]):
         assert unpacker.unpack() == list(range(size))
 
 
-def testMapSize(sizes=[0, 5, 50, 1000]):
+def testDictSize(sizes=[0, 5, 50, 1000]):
     bio = BytesIO()
     packer = Packer(pack_ctrl=pctrl())
     for size in sizes:
-        bio.write(packer.pack_map_header(size))
+        bio.write(packer.pack_dict_header(size))
         bio.write(packer.pack(None))
         for i in range(size):
             bio.write(packer.pack(i))  # key
             bio.write(packer.pack(i * 2))  # value
 
     bio.seek(0)
-    unpacker = Unpacker(bio, unpack_ctrl=uctrl(strict_map_key=False))
+    unpacker = Unpacker(bio, unpack_ctrl=uctrl(strict_dict_key=False))
     for size in sizes:
         assert unpacker.unpack() == {i: i * 2 for i in range(size)}
 
@@ -150,15 +150,15 @@ def test_odict():
 def test_pairlist():
     pairlist = ((b"a", 1), (2, b"b"), (b"foo", b"bar"))
     packer = Packer(pack_ctrl=pctrl())
-    packed = packer.pack_map_pairs(None, pairlist)
-    unpacked = unpackb(packed, unpack_ctrl=uctrl(object_as_pairs=True, strict_map_key=False))
+    packed = packer.pack_dict_pairs(None, pairlist)
+    unpacked = unpackb(packed, unpack_ctrl=uctrl(object_as_pairs=True, strict_dict_key=False))
     assert pairlist == unpacked
 
 
 def test_sort_keys(sizes=[3, 31, 127, 1023]):
     for size in sizes:
-        keys = range(1, 1000000000, 1000000000 // size)
-        map1 = {k: k for k in keys}
-        map2 = {k: k for k in reversed(keys)}
-        assert packb(map1, pack_ctrl=pctrl(sort_keys=False)) != packb(map2, pack_ctrl=pctrl(sort_keys=False))
-        assert packb(map1, pack_ctrl=pctrl(sort_keys=True)) == packb(map2, pack_ctrl=pctrl(sort_keys=True))
+        keys  = range(1, 1000000000, 1000000000 // size)
+        dict1 = {k: k for k in keys}
+        dict2 = {k: k for k in reversed(keys)}
+        assert packb(dict1, pack_ctrl=pctrl(sort_keys=False)) != packb(dict2, pack_ctrl=pctrl(sort_keys=False))
+        assert packb(dict1, pack_ctrl=pctrl(sort_keys=True)) == packb(dict2, pack_ctrl=pctrl(sort_keys=True))

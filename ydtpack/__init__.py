@@ -57,11 +57,11 @@ class UnpackConfig:
         If true, unpack ydtpack strings (raw) to Python bytes.
         Otherwise, unpack to Python str by decoding with UTF-8 encoding (default: False).
 
-    :param bool strict_map_key:
-        If true (default), only str or bytes are accepted for map (dict) keys.
+    :param bool strict_dict_key:
+        If true (default), only str or bytes are accepted for dict (dict) keys.
 
     :param callable object_as_pairs:
-        If true, handles maps as tuples of pairs.
+        If true, handles dicts as tuples of pairs.
         Otherwise, as dicts (default: False).
 
     :param str unicode_errors:
@@ -85,14 +85,14 @@ class UnpackConfig:
         Limits max length of array.
         (default: max_buffer_size)
 
-    :param int max_map_len:
-        Limits max length of map.
+    :param int max_dict_len:
+        Limits max length of dict.
         (default: max_buffer_size//2)
     """
 
-    def __init__(self, read_size=16*1024, use_list=True, raw=False, strict_map_key=True,
+    def __init__(self, read_size=16*1024, use_list=True, raw=False, strict_dict_key=True,
                  object_as_pairs=False, unicode_errors='strict', max_buffer_size=0,
-                 max_str_len=-1, max_bin_len=-1, max_array_len=-1, max_map_len=-1):
+                 max_str_len=-1, max_bin_len=-1, max_array_len=-1, max_dict_len=-1):
         if max_buffer_size == 0: max_buffer_size = 2**32-1
         self.max_buffer_size = max_buffer_size
         self.read_size       = min(read_size, max_buffer_size)
@@ -100,16 +100,16 @@ class UnpackConfig:
         if max_str_len == -1:   max_str_len   = max_buffer_size
         if max_bin_len == -1:   max_bin_len   = max_buffer_size
         if max_array_len == -1: max_array_len = max_buffer_size
-        if max_map_len == -1:   max_map_len   = max_buffer_size//2
+        if max_dict_len == -1:   max_dict_len   = max_buffer_size//2
 
         self.max_str_len   = max_str_len
         self.max_bin_len   = max_bin_len
         self.max_array_len = max_array_len
-        self.max_map_len   = max_map_len
+        self.max_dict_len   = max_dict_len
 
         self.use_list        = use_list
         self.raw             = raw
-        self.strict_map_key  = strict_map_key
+        self.strict_dict_key  = strict_dict_key
         self.object_as_pairs = object_as_pairs
         self.unicode_errors  = unicode_errors
 

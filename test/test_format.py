@@ -5,7 +5,7 @@ from ydtpack import unpackb
 
 
 def check(src, should, use_list=0, raw=True):
-    assert unpackb(src, unpack_ctrl=uctrl(use_list=use_list, raw=raw, strict_map_key=False)) == should
+    assert unpackb(src, unpack_ctrl=uctrl(use_list=use_list, raw=raw, strict_dict_key=False)) == should
 
 
 def testSimpleValue():
@@ -27,7 +27,7 @@ def testFixRaw():
     check(b"\x94\xc0\xa0\xa1a\xa2bc\xa3def", (b"", b"a", b"bc", b"def"))
 
 
-def testFixMap():
+def testFixDict():
     check(
         b"\x82\xc0\xc2\x81\xc0\xc0\xc0\xc3\x81\xc0\xc0\x80\xc0",
         {False: {None: None}, True: {None: {}}},
@@ -75,7 +75,7 @@ def testArray():
     )
 
 
-def testMap():
+def testDict():
     check(
         b"\x96\xc0"
         b"\xde\x00\x00\xc0"

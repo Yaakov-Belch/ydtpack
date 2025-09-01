@@ -92,7 +92,7 @@ def test_array32():
 
 def match(obj, buf):
     assert packb(obj, pack_ctrl=pctrl()) == buf
-    assert unpackb(buf, unpack_ctrl=uctrl(use_list=0, strict_map_key=False)) == obj
+    assert unpackb(buf, unpack_ctrl=uctrl(use_list=0, strict_dict_key=False)) == obj
 
 
 def test_match():

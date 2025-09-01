@@ -640,10 +640,10 @@ static inline int ydtpack_pack_array(ydtpack_packer* x, unsigned int n)
 
 
 /*
- * Map
+ * Dict
  */
 
-static inline int ydtpack_pack_map(ydtpack_packer* x, unsigned int n)
+static inline int ydtpack_pack_dict(ydtpack_packer* x, unsigned int n)
 {
     if(n < 16) {
         unsigned char d = 0x80 | n;

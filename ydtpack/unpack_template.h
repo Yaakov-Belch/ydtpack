@@ -29,7 +29,7 @@ typedef struct unpack_stack {
     unsigned int ct;
     unsigned int ct_next;
     PyObject* object_type;
-    PyObject* map_key;
+    PyObject* dict_key;
 } unpack_stack;
 
 struct unpack_context {
@@ -127,7 +127,7 @@ static inline int unpack_construct(unpack_context* ctx, const char* data, Py_ssi
     stack[top].ct_next = ct_next_; \
     stack[top].size    = count_; \
     stack[top].count   = 0; \
-    stack[top].object_type = stack[top].map_key = NULL; \
+    stack[top].object_type = stack[top].dict_key = NULL; \
     ++top; \
     goto _header_again
 
@@ -202,8 +202,8 @@ static inline int unpack_construct(unpack_context* ctx, const char* data, Py_ssi
                 case 0xdb:  // raw 32
                 case 0xdc:  // array 16
                 case 0xdd:  // array 32
-                case 0xde:  // map 16
-                case 0xdf:  // map 32
+                case 0xde:  // dict 16
+                case 0xdf:  // dict 32
                     again_fixed_trail(NEXT_CS(p), 2 << (((unsigned int)*p) & 0x01));
                 default:
                     ret = -2;
@@ -213,8 +213,8 @@ static inline int unpack_construct(unpack_context* ctx, const char* data, Py_ssi
                 again_fixed_trail_if_zero(ACS_RAW_VALUE, ((unsigned int)*p & 0x1f), _raw_zero);
             SWITCH_RANGE(0x90, 0x9f)  // FixArray
                 start_container(_array, ((unsigned int)*p) & 0x0f, CT_ARRAY_ITEM);
-            SWITCH_RANGE(0x80, 0x8f)  // FixMap
-                start_container(_map, ((unsigned int)*p) & 0x0f, CT_MAP_KEY);
+            SWITCH_RANGE(0x80, 0x8f)  // FixDict
+                start_container(_dict, ((unsigned int)*p) & 0x0f, CT_DICT_KEY);
 
             SWITCH_RANGE_DEFAULT
                 ret = -2;
@@ -296,11 +296,11 @@ static inline int unpack_construct(unpack_context* ctx, const char* data, Py_ssi
                 /* FIXME security guard */
                 start_container(_array, _ydtpack_load32(uint32_t,n), CT_ARRAY_ITEM);
 
-            case CS_MAP_16:
-                start_container(_map, _ydtpack_load16(uint16_t,n), CT_MAP_KEY);
-            case CS_MAP_32:
+            case CS_DICT_16:
+                start_container(_dict, _ydtpack_load16(uint16_t,n), CT_DICT_KEY);
+            case CS_DICT_32:
                 /* FIXME security guard */
-                start_container(_map, _ydtpack_load32(uint32_t,n), CT_MAP_KEY);
+                start_container(_dict, _ydtpack_load32(uint32_t,n), CT_DICT_KEY);
 
             default:
                 goto _failed;
@@ -315,14 +315,14 @@ _push:
         c->object_type = obj;
         c->ct = c->ct_next;
         goto _check_container_end;
-    case CT_MAP_KEY:
-        c->map_key = obj;
-        c->ct = CT_MAP_VALUE;
+    case CT_DICT_KEY:
+        c->dict_key = obj;
+        c->ct = CT_DICT_VALUE;
         goto _header_again;
-    case CT_MAP_VALUE:
-        if(unpack_callback_map_item(user, c->count, &c->obj, c->map_key, obj) < 0) { goto _failed; }
+    case CT_DICT_VALUE:
+        if(unpack_callback_dict_item(user, c->count, &c->obj, c->dict_key, obj) < 0) { goto _failed; }
         ++c->count;
-        c->ct = CT_MAP_KEY;
+        c->ct = CT_DICT_KEY;
         goto _check_container_end;
     case CT_ARRAY_ITEM:
         if(unpack_callback_array_item(user, c->count, &c->obj, obj) < 0) { goto _failed; }
@@ -339,8 +339,8 @@ _check_container_end:
         obj = c->obj;
         if(c->ct == CT_ARRAY_ITEM) {
            if (unpack_callback_array_end(user, object_type, &obj) < 0) { goto _failed; }
-        } else if (c->ct == CT_MAP_KEY) {
-           if (unpack_callback_map_end(user, object_type, &obj) < 0) { goto _failed; }
+        } else if (c->ct == CT_DICT_KEY) {
+           if (unpack_callback_dict_end(user, object_type, &obj) < 0) { goto _failed; }
         } else {
            goto _failed;
         }

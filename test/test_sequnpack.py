@@ -126,7 +126,7 @@ def test_unpack_tell():
         pack(m, stream, pack_ctrl=pctrl())
         offsets.append(stream.tell())
     stream.seek(0)
-    unpacker = Unpacker(stream, unpack_ctrl=uctrl(strict_map_key=False))
+    unpacker = Unpacker(stream, unpack_ctrl=uctrl(strict_dict_key=False))
     for m, o in zip(messages, offsets):
         m2 = next(unpacker)
         assert m == m2

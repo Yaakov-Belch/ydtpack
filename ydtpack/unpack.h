@@ -23,14 +23,14 @@ typedef struct unpack_user {
     bool use_list;
     bool raw;
     bool object_as_pairs;
-    bool strict_map_key;
+    bool strict_dict_key;
 
-    PyObject* from_map;
+    PyObject* from_dict;
     PyObject* from_array;
 
     PyObject *giga;
     const char *unicode_errors;
-    Py_ssize_t max_str_len, max_bin_len, max_array_len, max_map_len;
+    Py_ssize_t max_str_len, max_bin_len, max_array_len, max_dict_len;
 } unpack_user;
 
 typedef PyObject* ydtpack_unpack_object;
@@ -172,10 +172,10 @@ static inline int unpack_callback_array_end(
     return 0;
 }
 
-static inline int unpack_callback_map(unpack_user* u, unsigned int n, ydtpack_unpack_object* o)
+static inline int unpack_callback_dict(unpack_user* u, unsigned int n, ydtpack_unpack_object* o)
 {
-    if (n > u->max_map_len) {
-        PyErr_Format(PyExc_ValueError, "%u exceeds max_map_len(%zd)", n, u->max_map_len);
+    if (n > u->max_dict_len) {
+        PyErr_Format(PyExc_ValueError, "%u exceeds max_dict_len(%zd)", n, u->max_dict_len);
         return -1;
     }
     PyObject *p;
@@ -191,10 +191,10 @@ static inline int unpack_callback_map(unpack_user* u, unsigned int n, ydtpack_un
     return 0;
 }
 
-static inline int unpack_callback_map_item(unpack_user* u, unsigned int current, ydtpack_unpack_object* c, ydtpack_unpack_object k, ydtpack_unpack_object v)
+static inline int unpack_callback_dict_item(unpack_user* u, unsigned int current, ydtpack_unpack_object* c, ydtpack_unpack_object k, ydtpack_unpack_object v)
 {
-    if (u->strict_map_key && !PyUnicode_CheckExact(k) && !PyBytes_CheckExact(k)) {
-        PyErr_Format(PyExc_ValueError, "%.100s is not allowed for map key when strict_map_key=True", Py_TYPE(k)->tp_name);
+    if (u->strict_dict_key && !PyUnicode_CheckExact(k) && !PyBytes_CheckExact(k)) {
+        PyErr_Format(PyExc_ValueError, "%.100s is not allowed for dict key when strict_dict_key=True", Py_TYPE(k)->tp_name);
         return -1;
     }
     if (PyUnicode_CheckExact(k)) {
@@ -217,11 +217,11 @@ static inline int unpack_callback_map_item(unpack_user* u, unsigned int current,
     return -1;
 }
 
-static inline int unpack_callback_map_end(
+static inline int unpack_callback_dict_end(
     unpack_user* u, PyObject** object_type, ydtpack_unpack_object* c
 ){
 
-    PyObject *new_c = PyObject_CallFunctionObjArgs(u->from_map, *object_type, *c, NULL);
+    PyObject *new_c = PyObject_CallFunctionObjArgs(u->from_dict, *object_type, *c, NULL);
     if (!new_c)
         return -1;
     Py_DECREF(*object_type);

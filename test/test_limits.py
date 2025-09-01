@@ -32,9 +32,9 @@ def test_array_header():
         packer.pack_array_header(2**32)
 
 
-def test_map_header():
+def test_dict_header():
     packer = Packer(pack_ctrl=pctrl())
-    packer.pack_map_header(2**32 - 1)
+    packer.pack_dict_header(2**32 - 1)
     with pytest.raises(PackValueError):
         packer.pack_array_header(2**32)
 
@@ -81,15 +81,15 @@ def test_max_array_len():
         unpacker.unpack()
 
 
-def test_max_map_len():
+def test_max_dict_len():
     d = {1: 2, 3: 4, 5: 6}
     packed = packb(d, pack_ctrl=pctrl())
 
-    unpacker = Unpacker(unpack_ctrl=uctrl(max_map_len=3, strict_map_key=False))
+    unpacker = Unpacker(unpack_ctrl=uctrl(max_dict_len=3, strict_dict_key=False))
     unpacker.feed(packed)
     assert unpacker.unpack() == d
 
-    unpacker = Unpacker(unpack_ctrl=uctrl(max_map_len=2, strict_map_key=False))
+    unpacker = Unpacker(unpack_ctrl=uctrl(max_dict_len=2, strict_dict_key=False))
     with pytest.raises(UnpackValueError):
         unpacker.feed(packed)
         unpacker.unpack()
@@ -139,8 +139,8 @@ def test_auto_max_array_len():
         unpacker.unpack()
 
 
-def test_auto_max_map_len():
-    # len(packed) == 6 -> max_map_len == 3
+def test_auto_max_dict_len():
+    # len(packed) == 6 -> max_dict_len == 3
     packed = b"\xde\x00\x04zzz"
     with pytest.raises(UnpackValueError):
         unpackb(packed, unpack_ctrl=uctrl(raw=False))

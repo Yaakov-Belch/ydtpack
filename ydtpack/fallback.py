@@ -42,10 +42,10 @@ from .exceptions import BufferFull, OutOfData, ExtraData, FormatError, StackErro
 
 TYPE_IMMEDIATE = 0
 TYPE_ARRAY = 1
-TYPE_MAP = 2
-TYPE_RAW = 3
-TYPE_BIN = 4
-TYPE_EXT = 5
+TYPE_DICT = 2
+TYPE_RAW  = 3
+TYPE_BIN  = 4
+TYPE_EXT  = 5
 
 DEFAULT_RECURSE_LIMIT = 511
 
@@ -116,8 +116,8 @@ _MSGPACK_HEADERS = {
     0xDB: (4, ">I", TYPE_RAW),
     0xDC: (2, ">H", TYPE_ARRAY),
     0xDD: (4, ">I", TYPE_ARRAY),
-    0xDE: (2, ">H", TYPE_MAP),
-    0xDF: (4, ">I", TYPE_MAP),
+    0xDE: (2, ">H", TYPE_DICT),
+    0xDF: (4, ">I", TYPE_DICT),
 }
 
 
@@ -169,7 +169,7 @@ class Unpacker:
         if unpack_ctrl is None:
             raise ValueError("No unpack_ctrl supplied.")
 
-        self.from_map   = unpack_ctrl.from_map
+        self.from_dict = unpack_ctrl.from_dict
         self.from_array = unpack_ctrl.from_array
         if file_like is None:
             self._feeding = True
@@ -202,14 +202,14 @@ class Unpacker:
 
         self._read_size = o.read_size
         self._raw = bool(o.raw)
-        self._strict_map_key = bool(o.strict_map_key)
+        self._strict_dict_key = bool(o.strict_dict_key)
         self._unicode_errors = o.unicode_errors
         self._use_list = o.use_list
         self._object_as_pairs = o.object_as_pairs
         self._max_str_len   = o.max_str_len
         self._max_bin_len   = o.max_bin_len
         self._max_array_len = o.max_array_len
-        self._max_map_len   = o.max_map_len
+        self._max_dict_len  = o.max_dict_len
 
         self._stream_offset = 0
 
@@ -310,9 +310,9 @@ class Unpacker:
                 raise ValueError(f"{n} exceeds max_array_len({self._max_array_len})")
         elif b & 0b11110000 == 0b10000000:
             n = b & 0b00001111
-            typ = TYPE_MAP
-            if n > self._max_map_len:
-                raise ValueError(f"{n} exceeds max_map_len({self._max_map_len})")
+            typ = TYPE_DICT
+            if n > self._max_dict_len:
+                raise ValueError(f"{n} exceeds max_dict_len({self._max_dict_len})")
         elif b == 0xc0:
             obj = None
         # elif b == 0xc1: pass # never used
@@ -364,8 +364,8 @@ class Unpacker:
             self._reserve(size)
             (n,) = struct.unpack_from(fmt, self._buffer, self._buff_i)
             self._buff_i += size
-            if n > self._max_map_len:
-                raise ValueError(f"{n} exceeds max_map_len({self._max_map_len})")
+            if n > self._max_dict_len:
+                raise ValueError(f"{n} exceeds max_dict_len({self._max_dict_len})")
         else:
             raise FormatError("Unknown header: 0x%x" % b)
         if typ == TYPE_EXT:
@@ -386,7 +386,7 @@ class Unpacker:
                 ret = tuple(ret)
             ret = self.from_array(object_type, ret)
             return ret
-        if typ == TYPE_MAP:
+        if typ == TYPE_DICT:
             object_type = self._unpack() # <= XXX
             if self._object_as_pairs:
                 ret = tuple((self._unpack(), self._unpack()) for _ in range(n))
@@ -394,12 +394,12 @@ class Unpacker:
                 ret = {}
                 for _ in range(n):
                     key = self._unpack()
-                    if self._strict_map_key and type(key) not in (str, bytes):
-                        raise ValueError("%s is not allowed for map key" % str(type(key)))
+                    if self._strict_dict_key and type(key) not in (str, bytes):
+                        raise ValueError("%s is not allowed for dict key" % str(type(key)))
                     if type(key) is str:
                         key = sys.intern(key)
                     ret[key] = self._unpack()
-                ret = self.from_map(object_type, ret)
+                ret = self.from_dict(object_type, ret)
             return ret
         if typ == TYPE_RAW:
             if self._raw:
@@ -584,7 +584,7 @@ class Packer:
                 return
             if check(obj, dict):
                 _items = sorted(obj.items()) if self._sort_keys else obj.items()
-                return self._pack_map_pairs(len(obj), None, _items, nest_limit - 1)
+                return self._pack_dict_pairs(len(obj), None, _items, nest_limit - 1)
 
             if not default_used and self._default is not None:
                 obj = self._default(obj)
@@ -603,8 +603,8 @@ class Packer:
         self._buffer = StringIO()
         return ret
 
-    def pack_map_pairs(self, object_type, pairs):
-        self._pack_map_pairs(len(pairs), object_type, pairs)
+    def pack_dict_pairs(self, object_type, pairs):
+        self._pack_dict_pairs(len(pairs), object_type, pairs)
         ret = self._buffer.getvalue()
         self._buffer = StringIO()
         return ret
@@ -617,10 +617,10 @@ class Packer:
         self._buffer = StringIO()
         return ret
 
-    def pack_map_header(self, n):
+    def pack_dict_header(self, n):
         if n >= 2**32:
             raise ValueError
-        self._pack_map_header(n)
+        self._pack_dict_header(n)
         ret = self._buffer.getvalue()
         self._buffer = StringIO()
         return ret
@@ -634,7 +634,7 @@ class Packer:
             return self._buffer.write(struct.pack(">BI", 0xDD, n))
         raise ValueError("Array is too large")
 
-    def _pack_map_header(self, n):
+    def _pack_dict_header(self, n):
         if n <= 0x0F:
             return self._buffer.write(struct.pack("B", 0x80 + n))
         if n <= 0xFFFF:
@@ -643,8 +643,8 @@ class Packer:
             return self._buffer.write(struct.pack(">BI", 0xDF, n))
         raise ValueError("Dict is too large")
 
-    def _pack_map_pairs(self, n, object_type, pairs, nest_limit=DEFAULT_RECURSE_LIMIT):
-        self._pack_map_header(n)
+    def _pack_dict_pairs(self, n, object_type, pairs, nest_limit=DEFAULT_RECURSE_LIMIT):
+        self._pack_dict_header(n)
         self._pack(object_type, nest_limit - 1)
         for k, v in pairs:
             self._pack(k, nest_limit - 1)

@@ -8,7 +8,7 @@ class TestPackCtrl:
 
 @dataclass
 class TestUnpackCtrl:
-    def from_map(self, ctype, map):     return map
+    def from_dict(self, ctype, dict):   return dict
     def from_array(self, ctype, array): return array
     options: UnpackConfig
 
