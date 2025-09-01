@@ -200,8 +200,8 @@ class Unpacker:
         self._read_size = o.read_size
         self._raw = bool(o.raw)
         self._strict_dict_key = bool(o.strict_dict_key)
-        self._unicode_errors = o.unicode_errors
-        self._use_list = o.use_list
+        self._unicode_errors  = o.unicode_errors
+        self._use_tuple       = o.use_tuple
         self._object_as_pairs = o.object_as_pairs
         self._max_str_len  = o.max_str_len
         self._max_bin_len  = o.max_bin_len
@@ -379,7 +379,7 @@ class Unpacker:
             ret = newlist_hint(n)
             for i in range(n):
                 ret.append(self._unpack())
-            if not self._use_list:
+            if self._use_tuple:
                 ret = tuple(ret)
             ret = self.from_list(object_type, ret)
             return ret

@@ -20,7 +20,7 @@
 #include "unpack_define.h"
 
 typedef struct unpack_user {
-    bool use_list;
+    bool use_tuple;
     bool raw;
     bool object_as_pairs;
     bool strict_dict_key;
@@ -140,7 +140,7 @@ static inline int unpack_callback_list(unpack_user* u, unsigned int n, tmsgpack_
         PyErr_Format(PyExc_ValueError, "%u exceeds max_list_len(%zd)", n, u->max_list_len);
         return -1;
     }
-    PyObject *p = u->use_list ? PyList_New(n) : PyTuple_New(n);
+    PyObject *p = u->use_tuple ? PyTuple_New(n) : PyList_New(n);
 
     if (!p)
         return -1;
@@ -150,10 +150,10 @@ static inline int unpack_callback_list(unpack_user* u, unsigned int n, tmsgpack_
 
 static inline int unpack_callback_list_item(unpack_user* u, unsigned int current, tmsgpack_unpack_object* c, tmsgpack_unpack_object o)
 {
-    if (u->use_list)
-        PyList_SET_ITEM(*c, current, o);
-    else
+    if (u->use_tuple)
         PyTuple_SET_ITEM(*c, current, o);
+    else
+        PyList_SET_ITEM(*c, current, o);
     return 0;
 }
 

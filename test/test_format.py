@@ -4,8 +4,8 @@ from contexts_for_tests import pctrl, uctrl
 from tmsgpack import unpackb
 
 
-def check(src, should, use_list=0, raw=True):
-    assert unpackb(src, unpack_ctrl=uctrl(use_list=use_list, raw=raw, strict_dict_key=False)) == should
+def check(src, should, use_tuple=True, raw=True):
+    assert unpackb(src, unpack_ctrl=uctrl(use_tuple=use_tuple, raw=raw, strict_dict_key=False)) == should
 
 
 def testSimpleValue():

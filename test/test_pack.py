@@ -11,8 +11,8 @@ from pytest import raises, xfail
 from tmsgpack import packb, unpackb, Unpacker, Packer, pack
 
 
-def check(data, use_list=False):
-    re = unpackb(packb(data, pack_ctrl=pctrl()), unpack_ctrl=uctrl(use_list=use_list, strict_dict_key=False))
+def check(data, use_tuple=True):
+    re = unpackb(packb(data, pack_ctrl=pctrl()), unpack_ctrl=uctrl(use_tuple=use_tuple, strict_dict_key=False))
     assert re == data
 
 
@@ -58,11 +58,11 @@ def testPack():
 def testPackUnicode():
     test_data = ["", "abcd", ["defgh"], "Русский текст"]
     for td in test_data:
-        re = unpackb(packb(td, pack_ctrl=pctrl()), unpack_ctrl=uctrl(use_list=1, raw=False))
+        re = unpackb(packb(td, pack_ctrl=pctrl()), unpack_ctrl=uctrl(use_tuple=False, raw=False))
         assert re == td
         packer = Packer(pack_ctrl=pctrl())
         data = packer.pack(td)
-        re = Unpacker(BytesIO(data), unpack_ctrl=uctrl(raw=False, use_list=1)).unpack()
+        re = Unpacker(BytesIO(data), unpack_ctrl=uctrl(raw=False, use_tuple=False)).unpack()
         assert re == td
 
 
@@ -86,20 +86,20 @@ def testIgnoreUnicodeErrors():
 def testStrictUnicodeUnpack():
     packed = packb(b"abc\xeddef", pack_ctrl=pctrl(use_bin_type=False))
     with pytest.raises(UnicodeDecodeError):
-        unpackb(packed, unpack_ctrl=uctrl(raw=False, use_list=1))
+        unpackb(packed, unpack_ctrl=uctrl(raw=False, use_tuple=False))
 
 
 def testIgnoreErrorsPack():
     pack_ctrl=pctrl(use_bin_type=True, unicode_errors="ignore")
     re = unpackb(
         packb("abc\uDC80\uDCFFdef", pack_ctrl=pack_ctrl),
-        unpack_ctrl=uctrl(raw=False, use_list=1),
+        unpack_ctrl=uctrl(raw=False, use_tuple=False),
     )
     assert re == "abcdef"
 
 
 def testDecodeBinary():
-    re = unpackb(packb(b"abc", pack_ctrl=pctrl()), unpack_ctrl=uctrl(use_list=1))
+    re = unpackb(packb(b"abc", pack_ctrl=pctrl()), unpack_ctrl=uctrl(use_tuple=False))
     assert re == b"abc"
 
 
@@ -118,7 +118,7 @@ def testListSize(sizes=[0, 5, 50, 1000]):
             bio.write(packer.pack(i))
 
     bio.seek(0)
-    unpacker = Unpacker(bio, unpack_ctrl=uctrl(use_list=1))
+    unpacker = Unpacker(bio, unpack_ctrl=uctrl(use_tuple=False))
     for size in sizes:
         assert unpacker.unpack() == list(range(size))
 

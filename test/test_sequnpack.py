@@ -29,7 +29,7 @@ def test_partialdata():
 
 
 def test_foobar():
-    unpacker = Unpacker(unpack_ctrl=uctrl(read_size=3, use_list=1))
+    unpacker = Unpacker(unpack_ctrl=uctrl(read_size=3, use_tuple=False))
     unpacker.feed(b"foobar")
     assert unpacker.unpack() == ord(b"f")
     assert unpacker.unpack() == ord(b"o")
@@ -51,7 +51,7 @@ def test_foobar():
 
 
 def test_maxbuffersize():
-    unpacker = Unpacker(unpack_ctrl=uctrl(read_size=3, max_buffer_size=3, use_list=1))
+    unpacker = Unpacker(unpack_ctrl=uctrl(read_size=3, max_buffer_size=3, use_tuple=0))
     unpacker.feed(b"fo")
     with raises(BufferFull):
         unpacker.feed(b"ob")

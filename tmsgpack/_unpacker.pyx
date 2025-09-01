@@ -21,7 +21,7 @@ cdef object giga = 1_000_000_000
 
 cdef extern from "unpack.h":
     ctypedef struct tmsgpack_user:
-        bint use_list
+        bint use_tuple
         bint raw
         bint object_as_pairs
         bint strict_dict_key
@@ -51,13 +51,13 @@ cdef extern from "unpack.h":
 cdef inline init_ctx(unpack_context *ctx,
                      object from_dict, object from_list,
                      bint object_as_pairs,
-                     bint use_list, bint raw,
+                     bint use_tuple, bint raw,
                      bint strict_dict_key,
                      const char* unicode_errors,
                      Py_ssize_t max_str_len, Py_ssize_t max_bin_len,
                      Py_ssize_t max_list_len, Py_ssize_t max_dict_len):
     unpack_init(ctx)
-    ctx.user.use_list = use_list
+    ctx.user.use_tuple = use_tuple
     ctx.user.raw = raw
     ctx.user.strict_dict_key = strict_dict_key
 
@@ -135,7 +135,7 @@ def unpackb(object packed, *, object unpack_ctrl=None):
 
     try:
         init_ctx(&ctx, from_dict, from_list, o.object_as_pairs,
-                 o.use_list, o.raw, o.strict_dict_key, cerr,
+                 o.use_tuple, o.raw, o.strict_dict_key, cerr,
                  min(buf_len, o.max_str_len),
                  min(buf_len, o.max_bin_len),
                  min(buf_len, o.max_list_len),
@@ -256,7 +256,7 @@ cdef class Unpacker(object):
         init_ctx(&self.ctx,
                  self.from_dict, self.from_list,
                  o.object_as_pairs,
-                 o.use_list, o.raw, o.strict_dict_key, <const char*>cerr,
+                 o.use_tuple, o.raw, o.strict_dict_key, <const char*>cerr,
                  o.max_str_len, o.max_bin_len, o.max_list_len, o.max_dict_len)
 
     def feed(self, object next_bytes):

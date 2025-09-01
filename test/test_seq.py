@@ -30,7 +30,7 @@ def test_exceeding_unpacker_read_size():
     f = io.BytesIO(dumpf.getvalue())
     dumpf.close()
 
-    unpacker = tmsgpack.Unpacker(f, unpack_ctrl=uctrl(read_size=read_size, use_list=1))
+    unpacker = tmsgpack.Unpacker(f, unpack_ctrl=uctrl(read_size=read_size, use_tuple=0))
 
     read_count = 0
     for idx, o in enumerate(unpacker):
