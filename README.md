@@ -28,13 +28,13 @@ msgpack format to make all this elegantly possible.  This package is based on
 ## Usage
 Packing and unpacking data is controlled by `pack_ctrl` and `unpack_ctrl` objects (see
 below for details how to create them):
-```
+```python
 from tmsgpack import packb, unpackb
 packed = packb(data, pack_ctrl=pack_ctrl)
 unpacked = unpackb(packed, unpack_ctrl=unpack_ctrl)
 ```
 For multiple uses, you can use packer and unpacker objects:
-```
+```python
 from tmsgpack import Packer, Unpacker
 packer = Packer(pack_ctrl=pack_ctrl)
 unpacker = Unpacker(unpack_ctrl=unpack_ctrl)
@@ -45,7 +45,7 @@ unpacked = unpacker.unpack(packed)
 
 ## Minimal pack_ctrl and unpack_ctrl objects
 Minimal controllers allow only JSON-like objects and raise errors when you ask for more:
-```
+```python
 from tmsgpack import PackConfig, UnpackConfig
 from dataclasses import dataclass
 
@@ -72,7 +72,7 @@ minimal_unpack_ctrl = uctrl()
 
 ## The API and configuration
 As you see, the `pack_ctrl` object provides a method `from_obj`:
-```
+```python
 as_dict, data_type, data = pack_ctrl.from(obj)
 
 # When `as_dict` is true, then `data` should be a dictionary.
