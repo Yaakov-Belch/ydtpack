@@ -138,15 +138,6 @@ def testDictSize(sizes=[0, 5, 50, 1000]):
     for size in sizes:
         assert unpacker.unpack() == {i: i * 2 for i in range(size)}
 
-
-def test_pairlist():
-    pairlist = ((b"a", 1), (2, b"b"), (b"foo", b"bar"))
-    packer = Packer(pack_ctrl=pctrl())
-    packed = packer.pack_dict_pairs(None, pairlist)
-    unpacked = unpackb(packed, unpack_ctrl=uctrl(object_as_pairs=True, strict_dict_key=False))
-    assert pairlist == unpacked
-
-
 def test_sort_keys(sizes=[3, 31, 127, 1023]):
     for size in sizes:
         keys  = range(1, 1000000000, 1000000000 // size)

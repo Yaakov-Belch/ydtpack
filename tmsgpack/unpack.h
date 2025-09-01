@@ -223,7 +223,7 @@ static inline int unpack_callback_dict_item(unpack_user* u, unsigned int current
 static inline int unpack_callback_dict_end(
     unpack_user* u, PyObject** object_type, tmsgpack_unpack_object* c
 ){
-    if(*object_type != Py_None) {
+    if(u->object_as_pairs || *object_type != Py_None) {
         PyObject *new_c = PyObject_CallFunctionObjArgs(
             u->from_dict, *object_type, *c, NULL
         );

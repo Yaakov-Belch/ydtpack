@@ -388,6 +388,7 @@ class Unpacker:
             object_type = self._unpack() # <= XXX
             if self._object_as_pairs:
                 ret = tuple((self._unpack(), self._unpack()) for _ in range(n))
+                ret = self.from_dict(object_type, ret)
             else:
                 ret = {}
                 for _ in range(n):
@@ -397,7 +398,7 @@ class Unpacker:
                     if type(key) is str:
                         key = sys.intern(key)
                     ret[key] = self._unpack()
-                if object_type is not None:
+                if self._object_as_pairs or (object_type is not None):
                     ret = self.from_dict(object_type, ret)
             return ret
         if typ == TYPE_RAW:
