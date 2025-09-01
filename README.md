@@ -71,7 +71,8 @@ minimal_unpack_ctrl = uctrl()
 ```
 
 ## The API and configuration
-As you see, the `pack_ctrl` object provides a method `from_obj`:
+As you see, the `pack_ctrl` object provides a method `from_obj`. The `unpack_ctrl`
+object provides the methods `from_dict` and `from_array`:
 ```python
 as_dict, data_type, data = pack_ctrl.from(obj)
 
@@ -80,6 +81,7 @@ as_dict, data_type, data = pack_ctrl.from(obj)
 
 unpacked = unpack_ctrl.from_dict(data_type, data) # used when as_dict is true.
 unpacked = unpack_ctrl.from_list(data_type, data) # used when as_dict is false.
+```
 
 ## Controller configuration objects
 The `PackConfig` and `UnpackConfig` objects provide the following options:
@@ -191,3 +193,25 @@ make test
 pytest -v test/test_typed_objects.py
 ```
 
+## The tmsgpack format (version 0.0.1)
+The msgpack format defines two types of containers: maps and arrays (dicts and lists).
+They are encoded by a `container_header` that identifies the container type and the
+number of key-value pairs or array-elements that follow after the `container_header`:
+```
+   dict_container_header(3) key1 value1 key2 value2 key3 value3
+   array_container_header(3) element1 element2 element3
+```
+The tmsgpack format uses the same rules -- but adds an `object_type` entry right
+after every `container_header`:
+```
+   dict_container_header(3) object_type key1 value1 key2 value2 key3 value3
+   array_container_header(3) object_type element1 element2 element3
+```
+
+## Future extensibility
+In msgpack, possible `ExtType` values for the first `data_header` byte declare
+this data element as an msgpack extension.  The tmsgpack format does not use this
+extension mechanism -- and these eight values are available for future extensions.
+
+The value `0xC1` is never used by the original msgpack specification.  It is also
+available for future extensions of the tmsgpack format.
