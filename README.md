@@ -310,7 +310,8 @@ is evaluated.
 def test_simple_expression():
     run(Add(Add(1,2), Add(2,3)), 8) # Unpacking is expression evaluation.
 ```
-Adding variables, and running loops are left as exercises for the reader.
+Variables (parameters) can be implemented using a dictionary inside the `unpack_ctrl`
+object.
 
 ## Development: Environment and testing
 
