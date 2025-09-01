@@ -135,13 +135,13 @@ def pack(o, stream, pack_ctrl):
     stream.write(packer.pack(o))
 
 
-def packb(o, pack_ctrl, **kwargs): # kwargs: obsolete default
+def packb(o, pack_ctrl):
     """
     Pack object `o` and return packed bytes
 
     See :class:`Packer` for options.
     """
-    return Packer(pack_ctrl=pack_ctrl, **kwargs).pack(o)  # kwargs obsolete
+    return Packer(pack_ctrl=pack_ctrl).pack(o)
 
 
 def unpack(stream, unpack_ctrl):
