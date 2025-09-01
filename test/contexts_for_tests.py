@@ -3,7 +3,9 @@ from dataclasses import dataclass
 
 @dataclass
 class TestPackCtrl:
-    def from_obj(self, obj): return 123, [1,2,3]
+    def from_obj(self, obj):
+        raise TypeError(f'cannot serialize {type(obj)} object.')
+        return False, 'type:123', [1,2,3]
     options: PackConfig
 
 @dataclass

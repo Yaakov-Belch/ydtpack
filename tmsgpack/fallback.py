@@ -484,6 +484,7 @@ class Packer:
            raise(ValueError("No pack_ctrl supplied."))
 
         o = pack_ctrl.options
+        self.from_obj = pack_ctrl.from_obj
         self._list_types = (list, tuple) if o.tuple_as_list else (list,)
         self._strict_types = o.strict_types
         self._use_float = o.use_single_float
@@ -556,18 +557,25 @@ class Packer:
                 if self._use_float:
                     return self._buffer.write(struct.pack(">Bf", 0xCA, obj))
                 return self._buffer.write(struct.pack(">Bd", 0xCB, obj))
-            if type(obj) in list_types:
-                n = len(obj)
-                self._pack_list_header(n)
-                self._pack(None, nest_limit - 1)   # <= XXX
-                for i in range(n):
-                    self._pack(obj[i], nest_limit - 1)
-                return
-            if type(obj) is dict:
-                _items = sorted(obj.items()) if self._sort_keys else obj.items()
-                return self._pack_dict_pairs(len(obj), None, _items, nest_limit - 1)
 
-            raise TypeError(f"Cannot serialize {obj!r}")
+            if type(obj) is dict:
+                as_dict, object_type, data = True, None, obj
+            elif type(obj) in list_types:
+                as_dict, object_type, data = False, None, obj
+            else:
+                as_dict, object_type, data = self.from_obj(obj)
+
+            if as_dict:
+                _items = sorted(data.items()) if self._sort_keys else data.items()
+                _len   = len(_items)
+                return self._pack_dict_pairs(_len, object_type, _items, nest_limit - 1)
+            else:
+                n = len(data)
+                self._pack_list_header(n)
+                self._pack(object_type, nest_limit - 1)
+                for i in range(n):
+                    self._pack(data[i], nest_limit - 1)
+                return
 
     def pack(self, obj):
         try:

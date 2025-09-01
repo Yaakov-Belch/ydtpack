@@ -62,6 +62,7 @@ cdef class Packer(object):
     :param object pack_ctrl:
         Pack control context.
     """
+    cdef object from_obj
     cdef tmsgpack_packer pk
     cdef object _berrors
     cdef const char *unicode_errors
@@ -81,6 +82,8 @@ cdef class Packer(object):
     def __init__(self, *, object pack_ctrl):
         if pack_ctrl is None:
            raise(ValueError("No pack_ctrl supplied."))
+
+        self.from_obj = pack_ctrl.from_obj
 
         o = pack_ctrl.options
 
@@ -183,13 +186,20 @@ cdef class Packer(object):
                 PyBuffer_Release(&view);
             else:
                 if PyDict_CheckExact(o):
-                    d = <dict>o
+                    as_dict, object_type, data = True, None, o
+                elif PyList_CheckExact(o) or (tuple_as_list and PyTuple_CheckExact(o)):
+                    as_dict, object_type, data = False, None, o
+                else:
+                    as_dict, object_type, data = self.from_obj(o)
+
+                if as_dict:
+                    d = <dict>data
                     L = len(d)
                     if L > ITEM_LIMIT:
                         raise ValueError("dict is too large")
                     ret = tmsgpack_pack_dict(&self.pk, L)
-                    if ret != 0: return ret                 #    XXX
-                    ret = self._pack(None, nest_limit-1)    # <= XXX
+                    if ret != 0: return ret
+                    ret = self._pack(object_type, nest_limit-1)
                     if ret == 0:
                         _items = sorted(d.items()) if self.sort_keys else d.items()
                         for k, v in _items:
@@ -197,22 +207,17 @@ cdef class Packer(object):
                             if ret != 0: break
                             ret = self._pack(v, nest_limit-1)
                             if ret != 0: break
-                elif PyList_CheckExact(o) or (tuple_as_list and PyTuple_CheckExact(o)):
-                    L = Py_SIZE(o)
+                else:
+                    L = Py_SIZE(data)
                     if L > ITEM_LIMIT:
                         raise ValueError("list is too large")
                     ret = tmsgpack_pack_list(&self.pk, L)
-                    if ret != 0: return ret                 #    XXX
-                    ret = self._pack(None, nest_limit-1)    # <= XXX
+                    if ret != 0: return ret
+                    ret = self._pack(object_type, nest_limit-1)
                     if ret == 0:
-                        for v in o:
+                        for v in data:
                             ret = self._pack(v, nest_limit-1)
                             if ret != 0: break
-                else:
-                    PyErr_Format(
-                        TypeError, b"can not serialize '%.200s' object",
-                        Py_TYPE(o).tp_name,
-                    )
             return ret
 
     cpdef pack(self, object obj):
