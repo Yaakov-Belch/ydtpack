@@ -4,10 +4,6 @@ from pytest import raises
 from tmsgpack import packb, unpackb, Unpacker, FormatError, StackError, OutOfData
 
 
-class DummyException(Exception):
-    pass
-
-
 def test_invalidvalue():
     incomplete = b"\xd9\x97#DL_"  # raw8 - length=0x97
     with raises(ValueError):
