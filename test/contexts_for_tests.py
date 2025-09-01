@@ -11,7 +11,7 @@ class TestPackCtrl:
 class TestUnpackCtrl:
     def from_dict(self, ctype, dct):
         raise ValueError(f'Unpack type not supported: {ctype} data: {dct}')
-    def from_list(self, ctye, lst):
+    def from_list(self, ctype, lst):
         raise ValueError(f'Unpack type not supported: {ctype} data: {lst}')
     options: UnpackConfig
 
