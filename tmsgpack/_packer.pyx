@@ -170,32 +170,6 @@ cdef class Packer(object):
                     if ret == 0:
                         rawval = o
                         ret = tmsgpack_pack_raw_body(&self.pk, rawval, L)
-            elif PyDict_CheckExact(o):
-                d = <dict>o
-                L = len(d)
-                if L > ITEM_LIMIT:
-                    raise ValueError("dict is too large")
-                ret = tmsgpack_pack_dict(&self.pk, L)
-                if ret != 0: return ret                 #    XXX
-                ret = self._pack(None, nest_limit-1)    # <= XXX
-                if ret == 0:
-                    _items = sorted(d.items()) if self.sort_keys else d.items()
-                    for k, v in _items:
-                        ret = self._pack(k, nest_limit-1)
-                        if ret != 0: break
-                        ret = self._pack(v, nest_limit-1)
-                        if ret != 0: break
-            elif PyList_CheckExact(o) or (tuple_as_list and PyTuple_CheckExact(o)):
-                L = Py_SIZE(o)
-                if L > ITEM_LIMIT:
-                    raise ValueError("list is too large")
-                ret = tmsgpack_pack_list(&self.pk, L)
-                if ret != 0: return ret                 #    XXX
-                ret = self._pack(None, nest_limit-1)    # <= XXX
-                if ret == 0:
-                    for v in o:
-                        ret = self._pack(v, nest_limit-1)
-                        if ret != 0: break
             elif PyMemoryView_Check(o):
                 if PyObject_GetBuffer(o, &view, PyBUF_SIMPLE) != 0:
                     raise ValueError("could not get buffer for memoryview")
@@ -208,7 +182,37 @@ cdef class Packer(object):
                     ret = tmsgpack_pack_raw_body(&self.pk, <char*>view.buf, L)
                 PyBuffer_Release(&view);
             else:
-                PyErr_Format(TypeError, b"can not serialize '%.200s' object", Py_TYPE(o).tp_name)
+                if PyDict_CheckExact(o):
+                    d = <dict>o
+                    L = len(d)
+                    if L > ITEM_LIMIT:
+                        raise ValueError("dict is too large")
+                    ret = tmsgpack_pack_dict(&self.pk, L)
+                    if ret != 0: return ret                 #    XXX
+                    ret = self._pack(None, nest_limit-1)    # <= XXX
+                    if ret == 0:
+                        _items = sorted(d.items()) if self.sort_keys else d.items()
+                        for k, v in _items:
+                            ret = self._pack(k, nest_limit-1)
+                            if ret != 0: break
+                            ret = self._pack(v, nest_limit-1)
+                            if ret != 0: break
+                elif PyList_CheckExact(o) or (tuple_as_list and PyTuple_CheckExact(o)):
+                    L = Py_SIZE(o)
+                    if L > ITEM_LIMIT:
+                        raise ValueError("list is too large")
+                    ret = tmsgpack_pack_list(&self.pk, L)
+                    if ret != 0: return ret                 #    XXX
+                    ret = self._pack(None, nest_limit-1)    # <= XXX
+                    if ret == 0:
+                        for v in o:
+                            ret = self._pack(v, nest_limit-1)
+                            if ret != 0: break
+                else:
+                    PyErr_Format(
+                        TypeError, b"can not serialize '%.200s' object",
+                        Py_TYPE(o).tp_name,
+                    )
             return ret
 
     cpdef pack(self, object obj):
