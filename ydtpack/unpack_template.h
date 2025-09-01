@@ -200,8 +200,8 @@ static inline int unpack_construct(unpack_context* ctx, const char* data, Py_ssi
                     again_fixed_trail(NEXT_CS(p), 1);
                 case 0xda:  // raw 16
                 case 0xdb:  // raw 32
-                case 0xdc:  // array 16
-                case 0xdd:  // array 32
+                case 0xdc:  // list 16
+                case 0xdd:  // list 32
                 case 0xde:  // dict 16
                 case 0xdf:  // dict 32
                     again_fixed_trail(NEXT_CS(p), 2 << (((unsigned int)*p) & 0x01));
@@ -211,8 +211,8 @@ static inline int unpack_construct(unpack_context* ctx, const char* data, Py_ssi
                 }
             SWITCH_RANGE(0xa0, 0xbf)  // FixRaw
                 again_fixed_trail_if_zero(ACS_RAW_VALUE, ((unsigned int)*p & 0x1f), _raw_zero);
-            SWITCH_RANGE(0x90, 0x9f)  // FixArray
-                start_container(_array, ((unsigned int)*p) & 0x0f, CT_ARRAY_ITEM);
+            SWITCH_RANGE(0x90, 0x9f)  // FixList
+                start_container(_list, ((unsigned int)*p) & 0x0f, CT_LIST_ITEM);
             SWITCH_RANGE(0x80, 0x8f)  // FixDict
                 start_container(_dict, ((unsigned int)*p) & 0x0f, CT_DICT_KEY);
 
@@ -290,11 +290,11 @@ static inline int unpack_construct(unpack_context* ctx, const char* data, Py_ssi
             _raw_zero:
                 push_variable_value(_raw, data, n, trail);
 
-            case CS_ARRAY_16:
-                start_container(_array, _ydtpack_load16(uint16_t,n), CT_ARRAY_ITEM);
-            case CS_ARRAY_32:
+            case CS_LIST_16:
+                start_container(_list, _ydtpack_load16(uint16_t,n), CT_LIST_ITEM);
+            case CS_LIST_32:
                 /* FIXME security guard */
-                start_container(_array, _ydtpack_load32(uint32_t,n), CT_ARRAY_ITEM);
+                start_container(_list, _ydtpack_load32(uint32_t,n), CT_LIST_ITEM);
 
             case CS_DICT_16:
                 start_container(_dict, _ydtpack_load16(uint16_t,n), CT_DICT_KEY);
@@ -324,8 +324,8 @@ _push:
         ++c->count;
         c->ct = CT_DICT_KEY;
         goto _check_container_end;
-    case CT_ARRAY_ITEM:
-        if(unpack_callback_array_item(user, c->count, &c->obj, obj) < 0) { goto _failed; }
+    case CT_LIST_ITEM:
+        if(unpack_callback_list_item(user, c->count, &c->obj, obj) < 0) { goto _failed; }
         ++c->count;
         goto _check_container_end;
     default:
@@ -337,8 +337,8 @@ _check_container_end:
     if(c->count == c->size) {
         PyObject** object_type = &c->object_type;
         obj = c->obj;
-        if(c->ct == CT_ARRAY_ITEM) {
-           if (unpack_callback_array_end(user, object_type, &obj) < 0) { goto _failed; }
+        if(c->ct == CT_LIST_ITEM) {
+           if (unpack_callback_list_end(user, object_type, &obj) < 0) { goto _failed; }
         } else if (c->ct == CT_DICT_KEY) {
            if (unpack_callback_dict_end(user, object_type, &obj) < 0) { goto _failed; }
         } else {

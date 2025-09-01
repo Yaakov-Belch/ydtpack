@@ -72,22 +72,22 @@ def test_raw32():
     check_raw(5, 1 << 16)
 
 
-def check_array(overhead, num):
+def check_list(overhead, num):
     check(num + overhead + 1, (None,) * num)
 
 
-def test_fixarray():
-    check_array(1, 0)
-    check_array(1, (1 << 4) - 1)
+def test_fixlist():
+    check_list(1, 0)
+    check_list(1, (1 << 4) - 1)
 
 
-def test_array16():
-    check_array(3, 1 << 4)
-    check_array(3, (1 << 16) - 1)
+def test_list16():
+    check_list(3, 1 << 4)
+    check_list(3, (1 << 16) - 1)
 
 
-def test_array32():
-    check_array(5, (1 << 16))
+def test_list32():
+    check_list(5, (1 << 16))
 
 
 def match(obj, buf):

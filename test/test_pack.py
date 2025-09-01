@@ -108,11 +108,11 @@ def testPackFloat():
     assert packb(1.0, pack_ctrl=pctrl(use_single_float=False)) == b"\xcb" + struct.pack(">d", 1.0)
 
 
-def testArraySize(sizes=[0, 5, 50, 1000]):
+def testListSize(sizes=[0, 5, 50, 1000]):
     bio = BytesIO()
     packer = Packer(pack_ctrl=pctrl())
     for size in sizes:
-        bio.write(packer.pack_array_header(size))
+        bio.write(packer.pack_list_header(size))
         bio.write(packer.pack(None))
         for i in range(size):
             bio.write(packer.pack(i))

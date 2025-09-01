@@ -25,18 +25,18 @@ def test_integer():
         packb(x + 1, pack_ctrl=pctrl())
 
 
-def test_array_header():
+def test_list_header():
     packer = Packer(pack_ctrl=pctrl())
-    packer.pack_array_header(2**32 - 1)
+    packer.pack_list_header(2**32 - 1)
     with pytest.raises(PackValueError):
-        packer.pack_array_header(2**32)
+        packer.pack_list_header(2**32)
 
 
 def test_dict_header():
     packer = Packer(pack_ctrl=pctrl())
     packer.pack_dict_header(2**32 - 1)
     with pytest.raises(PackValueError):
-        packer.pack_array_header(2**32)
+        packer.pack_list_header(2**32)
 
 
 def test_max_str_len():
@@ -67,15 +67,15 @@ def test_max_bin_len():
         unpacker.unpack()
 
 
-def test_max_array_len():
+def test_max_list_len():
     d = [1, 2, 3]
     packed = packb(d, pack_ctrl=pctrl())
 
-    unpacker = Unpacker(unpack_ctrl=uctrl(max_array_len=3))
+    unpacker = Unpacker(unpack_ctrl=uctrl(max_list_len=3))
     unpacker.feed(packed)
     assert unpacker.unpack() == d
 
-    unpacker = Unpacker(unpack_ctrl=uctrl(max_array_len=2))
+    unpacker = Unpacker(unpack_ctrl=uctrl(max_list_len=2))
     with pytest.raises(UnpackValueError):
         unpacker.feed(packed)
         unpacker.unpack()
@@ -117,7 +117,7 @@ def test_max_dict_len():
 #
 #
 # @pytest.mark.skipif(True, reason="Requires very large memory.")
-# def test_array():
+# def test_list():
 #    x = [0] * (2**32 - 1)
 #    assert unpackb(packb(x, pack_ctrl=pctrl()), unpack_ctrl=uctrl()) == x
 #    x.append(0)
@@ -128,7 +128,7 @@ def test_max_dict_len():
 # auto max len
 
 
-def test_auto_max_array_len():
+def test_auto_max_list_len():
     packed = b"\xde\x00\x06zz"
     with pytest.raises(UnpackValueError):
         unpackb(packed, unpack_ctrl=uctrl(raw=False))

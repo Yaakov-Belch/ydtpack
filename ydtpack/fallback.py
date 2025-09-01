@@ -41,7 +41,7 @@ else:
 from .exceptions import BufferFull, OutOfData, ExtraData, FormatError, StackError
 
 TYPE_IMMEDIATE = 0
-TYPE_ARRAY = 1
+TYPE_LIST = 1
 TYPE_DICT = 2
 TYPE_RAW  = 3
 TYPE_BIN  = 4
@@ -114,8 +114,8 @@ _MSGPACK_HEADERS = {
     0xD9: (1, _NO_FORMAT_USED, TYPE_RAW),
     0xDA: (2, ">H", TYPE_RAW),
     0xDB: (4, ">I", TYPE_RAW),
-    0xDC: (2, ">H", TYPE_ARRAY),
-    0xDD: (4, ">I", TYPE_ARRAY),
+    0xDC: (2, ">H", TYPE_LIST),
+    0xDD: (4, ">I", TYPE_LIST),
     0xDE: (2, ">H", TYPE_DICT),
     0xDF: (4, ">I", TYPE_DICT),
 }
@@ -170,7 +170,7 @@ class Unpacker:
             raise ValueError("No unpack_ctrl supplied.")
 
         self.from_dict = unpack_ctrl.from_dict
-        self.from_array = unpack_ctrl.from_array
+        self.from_list = unpack_ctrl.from_list
         if file_like is None:
             self._feeding = True
         else:
@@ -206,10 +206,10 @@ class Unpacker:
         self._unicode_errors = o.unicode_errors
         self._use_list = o.use_list
         self._object_as_pairs = o.object_as_pairs
-        self._max_str_len   = o.max_str_len
-        self._max_bin_len   = o.max_bin_len
-        self._max_array_len = o.max_array_len
-        self._max_dict_len  = o.max_dict_len
+        self._max_str_len  = o.max_str_len
+        self._max_bin_len  = o.max_bin_len
+        self._max_list_len = o.max_list_len
+        self._max_dict_len = o.max_dict_len
 
         self._stream_offset = 0
 
@@ -305,9 +305,9 @@ class Unpacker:
             obj = self._read(n)
         elif b & 0b11110000 == 0b10010000:
             n = b & 0b00001111
-            typ = TYPE_ARRAY
-            if n > self._max_array_len:
-                raise ValueError(f"{n} exceeds max_array_len({self._max_array_len})")
+            typ = TYPE_LIST
+            if n > self._max_list_len:
+                raise ValueError(f"{n} exceeds max_list_len({self._max_list_len})")
         elif b & 0b11110000 == 0b10000000:
             n = b & 0b00001111
             typ = TYPE_DICT
@@ -357,8 +357,8 @@ class Unpacker:
             self._reserve(size)
             (n,) = struct.unpack_from(fmt, self._buffer, self._buff_i)
             self._buff_i += size
-            if n > self._max_array_len:
-                raise ValueError(f"{n} exceeds max_array_len({self._max_array_len})")
+            if n > self._max_list_len:
+                raise ValueError(f"{n} exceeds max_list_len({self._max_list_len})")
         elif 0xde <= b <= 0xdf:
             size, fmt, typ = _MSGPACK_HEADERS[b]
             self._reserve(size)
@@ -377,14 +377,14 @@ class Unpacker:
         typ, n, obj = self._read_header()
 
         # TODO should we eliminate the recursion?
-        if typ == TYPE_ARRAY:
+        if typ == TYPE_LIST:
             object_type = self._unpack() # <= XXX
             ret = newlist_hint(n)
             for i in range(n):
                 ret.append(self._unpack())
             if not self._use_list:
                 ret = tuple(ret)
-            ret = self.from_array(object_type, ret)
+            ret = self.from_list(object_type, ret)
             return ret
         if typ == TYPE_DICT:
             object_type = self._unpack() # <= XXX
@@ -577,7 +577,7 @@ class Packer:
                 return self._buffer.write(struct.pack(">Bd", 0xCB, obj))
             if check(obj, list_types):
                 n = len(obj)
-                self._pack_array_header(n)
+                self._pack_list_header(n)
                 self._pack(None, nest_limit - 1)   # <= XXX
                 for i in range(n):
                     self._pack(obj[i], nest_limit - 1)
@@ -609,10 +609,10 @@ class Packer:
         self._buffer = StringIO()
         return ret
 
-    def pack_array_header(self, n):
+    def pack_list_header(self, n):
         if n >= 2**32:
             raise ValueError
-        self._pack_array_header(n)
+        self._pack_list_header(n)
         ret = self._buffer.getvalue()
         self._buffer = StringIO()
         return ret
@@ -625,14 +625,14 @@ class Packer:
         self._buffer = StringIO()
         return ret
 
-    def _pack_array_header(self, n):
+    def _pack_list_header(self, n):
         if n <= 0x0F:
             return self._buffer.write(struct.pack("B", 0x90 + n))
         if n <= 0xFFFF:
             return self._buffer.write(struct.pack(">BH", 0xDC, n))
         if n <= 0xFFFFFFFF:
             return self._buffer.write(struct.pack(">BI", 0xDD, n))
-        raise ValueError("Array is too large")
+        raise ValueError("List is too large")
 
     def _pack_dict_header(self, n):
         if n <= 0x0F:

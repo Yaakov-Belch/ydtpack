@@ -25,7 +25,7 @@ cdef extern from "pack.h":
     int ydtpack_pack_unsigned_long_long(ydtpack_packer* pk, unsigned long long d)
     int ydtpack_pack_float(ydtpack_packer* pk, float d)
     int ydtpack_pack_double(ydtpack_packer* pk, double d)
-    int ydtpack_pack_array(ydtpack_packer* pk, size_t l)
+    int ydtpack_pack_list(ydtpack_packer* pk, size_t l)
     int ydtpack_pack_dict(ydtpack_packer* pk, size_t l)
     int ydtpack_pack_raw(ydtpack_packer* pk, size_t l)
     int ydtpack_pack_bin(ydtpack_packer* pk, size_t l)
@@ -215,7 +215,7 @@ cdef class Packer(object):
                 L = Py_SIZE(o)
                 if L > ITEM_LIMIT:
                     raise ValueError("list is too large")
-                ret = ydtpack_pack_array(&self.pk, L)
+                ret = ydtpack_pack_list(&self.pk, L)
                 if ret != 0: return ret                 #    XXX
                 ret = self._pack(None, nest_limit-1)    # <= XXX
                 if ret == 0:
@@ -254,10 +254,10 @@ cdef class Packer(object):
         self.pk.length = 0
         return buf
 
-    def pack_array_header(self, long long size):
+    def pack_list_header(self, long long size):
         if size > ITEM_LIMIT:
             raise ValueError
-        cdef int ret = ydtpack_pack_array(&self.pk, size)
+        cdef int ret = ydtpack_pack_list(&self.pk, size)
         if ret == -1:
             raise MemoryError
         elif ret:  # should not happen

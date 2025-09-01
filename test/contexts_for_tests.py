@@ -8,8 +8,8 @@ class TestPackCtrl:
 
 @dataclass
 class TestUnpackCtrl:
-    def from_dict(self, ctype, dict):   return dict
-    def from_array(self, ctype, array): return array
+    def from_dict(self, ctype, dct): return dct
+    def from_list(self, ctype, lst): return lst
     options: UnpackConfig
 
 def pctrl(**kwargs): return TestPackCtrl(options=PackConfig(**kwargs))

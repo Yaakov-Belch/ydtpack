@@ -22,10 +22,10 @@ def test_invalidvalue():
         unpackb(b"\xc1", unpack_ctrl=uctrl())  # (undefined tag)
 
     with raises(FormatError):
-        unpackb(b"\x91\xc1", unpack_ctrl=uctrl())  # fixarray(len=1) [ (undefined tag) ]
+        unpackb(b"\x91\xc1", unpack_ctrl=uctrl())  # fixlist(len=1) [ (undefined tag) ]
 
     with raises(StackError):
-        unpackb(b"\x91" * 3000, unpack_ctrl=uctrl())  # nested fixarray(len=1)
+        unpackb(b"\x91" * 3000, unpack_ctrl=uctrl())  # nested fixlist(len=1)
 
 
 def test_strict_dict_key():

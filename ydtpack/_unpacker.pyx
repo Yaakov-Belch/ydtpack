@@ -27,13 +27,13 @@ cdef extern from "unpack.h":
         bint strict_dict_key
 
         PyObject* from_dict;
-        PyObject* from_array;
+        PyObject* from_list;
 
         PyObject *giga;
         char *unicode_errors
         Py_ssize_t max_str_len
         Py_ssize_t max_bin_len
-        Py_ssize_t max_array_len
+        Py_ssize_t max_list_len
         Py_ssize_t max_dict_len
 
     ctypedef struct unpack_context:
@@ -49,24 +49,24 @@ cdef extern from "unpack.h":
     void unpack_clear(unpack_context* ctx)
 
 cdef inline init_ctx(unpack_context *ctx,
-                     object from_dict, object from_array,
+                     object from_dict, object from_list,
                      bint object_as_pairs,
                      bint use_list, bint raw,
                      bint strict_dict_key,
                      const char* unicode_errors,
                      Py_ssize_t max_str_len, Py_ssize_t max_bin_len,
-                     Py_ssize_t max_array_len, Py_ssize_t max_dict_len):
+                     Py_ssize_t max_list_len, Py_ssize_t max_dict_len):
     unpack_init(ctx)
     ctx.user.use_list = use_list
     ctx.user.raw = raw
     ctx.user.strict_dict_key = strict_dict_key
 
-    ctx.user.from_dict   = <PyObject*>from_dict
-    ctx.user.from_array = <PyObject*>from_array
+    ctx.user.from_dict = <PyObject*>from_dict
+    ctx.user.from_list = <PyObject*>from_list
 
-    ctx.user.max_str_len = max_str_len
-    ctx.user.max_bin_len = max_bin_len
-    ctx.user.max_array_len = max_array_len
+    ctx.user.max_str_len  = max_str_len
+    ctx.user.max_bin_len  = max_bin_len
+    ctx.user.max_list_len = max_list_len
     ctx.user.max_dict_len = max_dict_len
 
     ctx.user.object_as_pairs = object_as_pairs
@@ -124,8 +124,8 @@ def unpackb(object packed, *, object unpack_ctrl=None):
     if unpack_ctrl is None:
         raise(ValueError("No unpack_ctrl supplied."))
 
-    cdef from_dict   = unpack_ctrl.from_dict
-    cdef from_array = unpack_ctrl.from_array
+    cdef from_dict = unpack_ctrl.from_dict
+    cdef from_list = unpack_ctrl.from_list
 
     o = unpack_ctrl.options
     if o.unicode_errors is not None:
@@ -134,11 +134,11 @@ def unpackb(object packed, *, object unpack_ctrl=None):
     get_data_from_buffer(packed, &view, &buf, &buf_len)
 
     try:
-        init_ctx(&ctx, from_dict, from_array, o.object_as_pairs,
+        init_ctx(&ctx, from_dict, from_list, o.object_as_pairs,
                  o.use_list, o.raw, o.strict_dict_key, cerr,
                  min(buf_len, o.max_str_len),
                  min(buf_len, o.max_bin_len),
-                 min(buf_len, o.max_array_len),
+                 min(buf_len, o.max_list_len),
                  min(buf_len, o.max_dict_len))
         ret = unpack_construct(&ctx, buf, buf_len, &off)
     finally:
@@ -205,7 +205,7 @@ cdef class Unpacker(object):
     cdef Py_ssize_t read_size
     # To maintain refcnt.
     cdef object from_dict
-    cdef object from_array
+    cdef object from_list
     cdef bint object_as_pairs
     cdef object unicode_errors
     cdef Py_ssize_t max_buffer_size
@@ -226,8 +226,8 @@ cdef class Unpacker(object):
         if unpack_ctrl is None:
            raise(ValueError("No unpack_ctrl supplied."))
 
-        self.from_dict  = unpack_ctrl.from_dict
-        self.from_array = unpack_ctrl.from_array
+        self.from_dict = unpack_ctrl.from_dict
+        self.from_list = unpack_ctrl.from_list
 
         self.file_like = file_like
         if file_like:
@@ -254,10 +254,10 @@ cdef class Unpacker(object):
             cerr = self.unicode_errors = o.unicode_errors
 
         init_ctx(&self.ctx,
-                 self.from_dict, self.from_array,
+                 self.from_dict, self.from_list,
                  o.object_as_pairs,
                  o.use_list, o.raw, o.strict_dict_key, <const char*>cerr,
-                 o.max_str_len, o.max_bin_len, o.max_array_len, o.max_dict_len)
+                 o.max_str_len, o.max_bin_len, o.max_list_len, o.max_dict_len)
 
     def feed(self, object next_bytes):
         """Append `next_bytes` to internal buffer."""

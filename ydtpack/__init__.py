@@ -50,7 +50,7 @@ class UnpackConfig:
         Used as `file_like.read(read_size)`. (default: `min(16*1024, max_buffer_size)`)
 
     :param bool use_list:
-        If true, unpack ydtpack array to Python list.
+        If true, unpack ydtpack list to Python list.
         Otherwise, unpack to Python tuple. (default: True)
 
     :param bool raw:
@@ -81,8 +81,8 @@ class UnpackConfig:
     :param int max_bin_len:
         Limits max length of bin. (default: max_buffer_size)
 
-    :param int max_array_len:
-        Limits max length of array.
+    :param int max_list_len:
+        Limits max length of list.
         (default: max_buffer_size)
 
     :param int max_dict_len:
@@ -92,20 +92,20 @@ class UnpackConfig:
 
     def __init__(self, read_size=16*1024, use_list=True, raw=False, strict_dict_key=True,
                  object_as_pairs=False, unicode_errors='strict', max_buffer_size=0,
-                 max_str_len=-1, max_bin_len=-1, max_array_len=-1, max_dict_len=-1):
+                 max_str_len=-1, max_bin_len=-1, max_list_len=-1, max_dict_len=-1):
         if max_buffer_size == 0: max_buffer_size = 2**32-1
         self.max_buffer_size = max_buffer_size
         self.read_size       = min(read_size, max_buffer_size)
 
-        if max_str_len == -1:   max_str_len   = max_buffer_size
-        if max_bin_len == -1:   max_bin_len   = max_buffer_size
-        if max_array_len == -1: max_array_len = max_buffer_size
-        if max_dict_len == -1:   max_dict_len   = max_buffer_size//2
+        if max_str_len == -1:  max_str_len  = max_buffer_size
+        if max_bin_len == -1:  max_bin_len  = max_buffer_size
+        if max_list_len == -1: max_list_len = max_buffer_size
+        if max_dict_len == -1: max_dict_len  = max_buffer_size//2
 
-        self.max_str_len   = max_str_len
-        self.max_bin_len   = max_bin_len
-        self.max_array_len = max_array_len
-        self.max_dict_len   = max_dict_len
+        self.max_str_len  = max_str_len
+        self.max_bin_len  = max_bin_len
+        self.max_list_len = max_list_len
+        self.max_dict_len  = max_dict_len
 
         self.use_list        = use_list
         self.raw             = raw

@@ -70,8 +70,8 @@ typedef enum {
     CS_RAW_8             = 0x19,
     CS_RAW_16            = 0x1a,
     CS_RAW_32            = 0x1b,
-    CS_ARRAY_16          = 0x1c,
-    CS_ARRAY_32          = 0x1d,
+    CS_LIST_16           = 0x1c,
+    CS_LIST_32           = 0x1d,
     CS_DICT_16           = 0x1e,
     CS_DICT_32           = 0x1f,
 
@@ -84,7 +84,7 @@ typedef enum {
     CT_CONTAINER_TYPE,
     CT_DICT_KEY,
     CT_DICT_VALUE,
-    CT_ARRAY_ITEM,
+    CT_LIST_ITEM,
 } ydtpack_container_type;
 
 

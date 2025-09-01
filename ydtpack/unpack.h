@@ -26,11 +26,11 @@ typedef struct unpack_user {
     bool strict_dict_key;
 
     PyObject* from_dict;
-    PyObject* from_array;
+    PyObject* from_list;
 
     PyObject *giga;
     const char *unicode_errors;
-    Py_ssize_t max_str_len, max_bin_len, max_array_len, max_dict_len;
+    Py_ssize_t max_str_len, max_bin_len, max_list_len, max_dict_len;
 } unpack_user;
 
 typedef PyObject* ydtpack_unpack_object;
@@ -134,10 +134,10 @@ static inline int unpack_callback_true(unpack_user* u, ydtpack_unpack_object* o)
 static inline int unpack_callback_false(unpack_user* u, ydtpack_unpack_object* o)
 { Py_INCREF(Py_False); *o = Py_False; return 0; }
 
-static inline int unpack_callback_array(unpack_user* u, unsigned int n, ydtpack_unpack_object* o)
+static inline int unpack_callback_list(unpack_user* u, unsigned int n, ydtpack_unpack_object* o)
 {
-    if (n > u->max_array_len) {
-        PyErr_Format(PyExc_ValueError, "%u exceeds max_array_len(%zd)", n, u->max_array_len);
+    if (n > u->max_list_len) {
+        PyErr_Format(PyExc_ValueError, "%u exceeds max_list_len(%zd)", n, u->max_list_len);
         return -1;
     }
     PyObject *p = u->use_list ? PyList_New(n) : PyTuple_New(n);
@@ -148,7 +148,7 @@ static inline int unpack_callback_array(unpack_user* u, unsigned int n, ydtpack_
     return 0;
 }
 
-static inline int unpack_callback_array_item(unpack_user* u, unsigned int current, ydtpack_unpack_object* c, ydtpack_unpack_object o)
+static inline int unpack_callback_list_item(unpack_user* u, unsigned int current, ydtpack_unpack_object* c, ydtpack_unpack_object o)
 {
     if (u->use_list)
         PyList_SET_ITEM(*c, current, o);
@@ -157,11 +157,11 @@ static inline int unpack_callback_array_item(unpack_user* u, unsigned int curren
     return 0;
 }
 
-static inline int unpack_callback_array_end(
+static inline int unpack_callback_list_end(
     unpack_user* u, PyObject** object_type, ydtpack_unpack_object* c
 )
 {
-    PyObject *new_c = PyObject_CallFunctionObjArgs(u->from_array, *object_type, *c, NULL);
+    PyObject *new_c = PyObject_CallFunctionObjArgs(u->from_list, *object_type, *c, NULL);
     if (!new_c)
         return -1;
     Py_DECREF(*object_type);

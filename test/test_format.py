@@ -19,7 +19,7 @@ def testFixnum():
     )
 
 
-def testFixArray():
+def testFixList():
     check(b"\x92\xc0\x90\xc0\x91\xc0\x91\xc0\xc0", ((), ((None,),)))
 
 
@@ -66,7 +66,7 @@ def testRaw():
     )
 
 
-def testArray():
+def testList():
     check(
         b"\x96\xc0\xdc\x00\x00\xc0\xdc\x00\x01\xc0\xc0\xdc\x00\x02\xc0\xc2\xc3"
         b"\xdd\x00\x00\x00\x00\xc0\xdd\x00\x00\x00\x01\xc0\xc0"
