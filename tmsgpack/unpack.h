@@ -161,15 +161,18 @@ static inline int unpack_callback_list_end(
     unpack_user* u, PyObject** object_type, tmsgpack_unpack_object* c
 )
 {
-    PyObject *new_c = PyObject_CallFunctionObjArgs(u->from_list, *object_type, *c, NULL);
-    if (!new_c)
-        return -1;
+    if(*object_type != Py_None) {
+        PyObject *new_c = PyObject_CallFunctionObjArgs(
+            u->from_list, *object_type, *c, NULL
+        );
+        Py_DECREF(*c);
+        *c = new_c;
+    }
     Py_DECREF(*object_type);
     *object_type = NULL;
-    Py_DECREF(*c);
-    *c = new_c;
 
-    return 0;
+    if(*c) { return 0;  }
+    else   { return -1; }
 }
 
 static inline int unpack_callback_dict(unpack_user* u, unsigned int n, tmsgpack_unpack_object* o)
@@ -220,16 +223,18 @@ static inline int unpack_callback_dict_item(unpack_user* u, unsigned int current
 static inline int unpack_callback_dict_end(
     unpack_user* u, PyObject** object_type, tmsgpack_unpack_object* c
 ){
-
-    PyObject *new_c = PyObject_CallFunctionObjArgs(u->from_dict, *object_type, *c, NULL);
-    if (!new_c)
-        return -1;
+    if(*object_type != Py_None) {
+        PyObject *new_c = PyObject_CallFunctionObjArgs(
+            u->from_dict, *object_type, *c, NULL
+        );
+        Py_DECREF(*c);
+        *c = new_c;
+    }
     Py_DECREF(*object_type);
     *object_type = NULL;
-    Py_DECREF(*c);
-    *c = new_c;
 
-    return 0;
+    if(*c) { return 0;  }
+    else   { return -1; }
 }
 
 static inline int unpack_callback_raw(unpack_user* u, const char* b, const char* p, unsigned int l, tmsgpack_unpack_object* o)

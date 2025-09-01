@@ -4,14 +4,15 @@ from dataclasses import dataclass
 @dataclass
 class TestPackCtrl:
     def from_obj(self, obj):
-        raise TypeError(f'cannot serialize {type(obj)} object.')
-        return False, 'type:123', [1,2,3]
+        raise TypeError(f'Cannot serialize {type(obj)} object.')
     options: PackConfig
 
 @dataclass
 class TestUnpackCtrl:
-    def from_dict(self, ctype, dct): return dct
-    def from_list(self, ctype, lst): return lst
+    def from_dict(self, ctype, dct):
+        raise ValueError(f'Unpack type not supported: {ctype} data: {dct}')
+    def from_list(self, ctye, lst):
+        raise ValueError(f'Unpack type not supported: {ctype} data: {lst}')
     options: UnpackConfig
 
 def pctrl(**kwargs): return TestPackCtrl(options=PackConfig(**kwargs))

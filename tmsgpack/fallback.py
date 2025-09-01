@@ -381,7 +381,8 @@ class Unpacker:
                 ret.append(self._unpack())
             if self._use_tuple:
                 ret = tuple(ret)
-            ret = self.from_list(object_type, ret)
+            if object_type is not None:
+                ret = self.from_list(object_type, ret)
             return ret
         if typ == TYPE_DICT:
             object_type = self._unpack() # <= XXX
@@ -396,7 +397,8 @@ class Unpacker:
                     if type(key) is str:
                         key = sys.intern(key)
                     ret[key] = self._unpack()
-                ret = self.from_dict(object_type, ret)
+                if object_type is not None:
+                    ret = self.from_dict(object_type, ret)
             return ret
         if typ == TYPE_RAW:
             if self._raw:
