@@ -22,12 +22,18 @@ class TypedPackCtrl:
         return as_dict, object_type, data
     options: PackConfig
 
+    def pack(self, data):
+        return packb(data, pack_ctrl=self)
+
 @dataclass
 class TypedUnpackCtrl:
     constructors: Dict[str, callable]
     def from_dict(self, ctype, data): return self.constructors[ctype](**data)
     def from_list(self, ctype, data): return self.constructors[ctype]( *data)
     options: UnpackConfig
+
+    def unpack(self, packed):
+        return unpackb(packed, unpack_ctrl=self)
 
 def pc(**kwargs): return TypedPackCtrl(options=PackConfig(**kwargs))
 def uc(fns, **kwargs):
@@ -38,20 +44,14 @@ def uc(fns, **kwargs):
 
 @dataclass
 class Foo:
-    y: str = 'Y'
     x: int = 1
+    y: str = 'Y'
 
 @dataclass
 class Bar:
-    y: str = 'Y'
     x: int = 1
+    y: str = 'Y'
     as_list = True
-
-@dataclass
-class FooBar:
-    y: str = 'Y'
-    x: int = 1
-    as_list: bool = False
 
 @dataclass
 class Add:
@@ -64,8 +64,15 @@ class Expr:
 
 def run(input, expected=None):
     if expected is None: expected = input
-    packed = packb(input, pack_ctrl=pc())
-    output = unpackb(packed, unpack_ctrl=uc([Foo, Bar, FooBar, Expr.Add]))
+
+    constructors = [Foo, Bar, Expr.Add]
+
+    pack_ctrl = pc()
+    unpack_ctrl = uc(constructors)
+
+    packed = pack_ctrl.pack(input)
+    output = unpack_ctrl.unpack(packed)
+
     assert output == expected
 
 def test_typed_foobar():
@@ -73,5 +80,5 @@ def test_typed_foobar():
     run(Bar())  # Encoded as a typed list
 
 def test_simple_expression():
-    run(Add(Add(1,2), Add(2,3)), 8)
+    run(Add(Add(1,2), Add(2,3)), 8) # Unpacking is expression evaluation.
 

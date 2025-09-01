@@ -33,18 +33,28 @@ from tmsgpack import packb, unpackb
 packed = packb(data, pack_ctrl=pack_ctrl)
 unpacked = unpackb(packed, unpack_ctrl=unpack_ctrl)
 ```
+
+## Streaming unpacking
 For multiple uses, you can use packer and unpacker objects:
 ```python
-from tmsgpack import Packer, Unpacker
+from tmsgpack import Packer
 packer = Packer(pack_ctrl=pack_ctrl)
-unpacker = Unpacker(unpack_ctrl=unpack_ctrl)
 
-packed = packer.pack(data)
-unpacked = unpacker.unpack(packed)
+packed = packer.pack(data) # Send these packages via a socket...
+
+---
+from tmsgpack import Packer, Unpacker
+
+unpacker = Unpacker(unpack_ctrl=unpack_ctrl)
+while buf := sock.recv(1024**2):
+    unpacker.feed(buf)
+    for o in unpacker:
+        process(o)
 ```
 
 ## Minimal pack_ctrl and unpack_ctrl objects
-Minimal controllers allow only JSON-like objects and raise errors when you ask for more:
+Minimal controllers allow only JSON-like objects and raise errors when you ask for more
+(below, we show examples for more useful controllers):
 ```python
 from tmsgpack import PackConfig, UnpackConfig
 from dataclasses import dataclass
@@ -83,15 +93,19 @@ unpacked = unpack_ctrl.from_dict(data_type, data) # used when as_dict is true.
 unpacked = unpack_ctrl.from_list(data_type, data) # used when as_dict is false.
 ```
 
-## Controller configuration objects
-The `PackConfig` and `UnpackConfig` objects provide the following options:
+## PackConfig configuration objects for pack_ctrl
+`PackConfig` objects provide the following options:
 ```python
+from tmsgpack import PackConfig
+
 config = PackConfig(
     use_single_float=False, use_bin_type=True,
     tuple_as_list=True, strict_types=False,
     unicode_errors='strict', sort_keys=False,
 )
 """
+Config object for pack_ctrl.options
+
 :param bool use_single_float:
     Use single precision float type for float. (default: False)
 
@@ -115,6 +129,11 @@ config = PackConfig(
 :param bool sort_keys:
     Sort output dictionaries by key. (default: False)
 """
+```
+## UnpackConfig configuration objects for unpack_ctrl
+`UnpackConfig` objects provide the following options:
+```python
+from tmsgpack import UnpackConfig
 
 config = UnpackConfig(
     read_size=16*1024, use_tuple=False, raw=False,
@@ -168,6 +187,131 @@ Config object for unpack_ctrl.options
     (default: max_buffer_size//2)
 """
 ```
+## Packing and Unpacking dataclass objects
+Here are the parts of one unit test that shows end-to-end packing and unpacking
+of dataclass objects:
+
+For the setup, we import tools and define the controllers:
+```python
+from tmsgpack import packb, unpackb, PackConfig, UnpackConfig
+from dataclasses import dataclass, is_dataclass, fields
+from typing import Dict
+
+@dataclass
+class TypedPackCtrl:
+    def from_obj(self, obj):
+        if type(obj) is tuple: return [False, 'tuple', obj]
+        if not is_dataclass(obj): raise TypeError(f'Cannot serialize {type(obj)} object.')
+        as_dict = not getattr(obj, 'as_list', False)
+        object_type = obj.__class__.__name__
+        if as_dict:
+            data = {
+                field.name: getattr(obj, field.name)
+                for field in fields(obj)
+            }
+        else:
+            data = [
+                getattr(obj, field.name)
+                for field in fields(obj)
+            ]
+        return as_dict, object_type, data
+    options: PackConfig
+
+    def pack(self, data):
+        return packb(data, pack_ctrl=self)
+
+@dataclass
+class TypedUnpackCtrl:
+    constructors: Dict[str, callable]
+    def from_dict(self, ctype, data): return self.constructors[ctype](**data)
+    def from_list(self, ctype, data): return self.constructors[ctype]( *data)
+    options: UnpackConfig
+
+    def unpack(self, packed):
+        return unpackb(packed, unpack_ctrl=self)
+
+def pc(**kwargs): return TypedPackCtrl(options=PackConfig(**kwargs))
+def uc(fns, **kwargs):
+    return TypedUnpackCtrl(
+        constructors={fn.__name__:fn for fn in fns},
+        options=UnpackConfig(**kwargs),
+    )
+```
+Notes:
+* For conveninence, we added methods `pack_ctrl.pack(data)` and
+  `unpack_ctrl.unpack(packed)`.
+* The method `pack_ctrl.from_obj` decides whether to represent the dataclass object
+  as a key-value dict or as a more compact list of values.
+* It extracts the properties of the `obj` and sets the values `as_dict`, `object_type`
+  and `data` appropriately.
+* In this implementation, object types are the unqualified class names. There is
+  a possibility that one class from one package can have the same name as a different
+  class from a different package.
+* Fully resolving naming spaces is a deep design problem.  You need to decide what
+  you mean by 'meaning'.  Here, we exploit this overloadability...
+* The `unpack_ctrl` object is created with a list of available constructor functions.
+
+Now, we can define the data classes to be packed and unpacked:
+```python
+@dataclass
+class Foo:
+    x: int = 1
+    y: str = 'Y'
+
+@dataclass
+class Bar:
+    x: int = 1
+    y: str = 'Y'
+    as_list = True
+
+@dataclass
+class Add:
+    x: int = 10
+    y: int = 20
+
+class Expr:
+    @staticmethod
+    def Add(x:int, y:int): return x+y
+```
+Notes:
+* Class Bar has a class property `as_list=True`.  It will be packed compactly as
+  a parameter value list.
+* The function (static method) `Expr.Add` has the same name as the class constructor
+  `Add`.  We will soon exploit this...
+
+Here is a simple test runner to be used for several tests:
+```python
+def run(input, expected=None):
+    if expected is None: expected = input
+
+    constructors = [Foo, Bar, Expr.Add]
+
+    pack_ctrl = pc()
+    unpack_ctrl = uc(constructors)
+
+    packed = pack_ctrl.pack(input)
+    output = unpack_ctrl.unpack(packed)
+
+    assert output == expected
+```
+
+And here are the first tests. The `Foo()` and `Bar()` objects are packed and unpacked
+correctly:
+```python
+def test_typed_foobar():
+    run(Foo())  # Encoded as a typed dict
+    run(Bar())  # Encoded as a typed list
+```
+
+The second test shows that we can encode an object tree into an
+binary expression buffer.  When unpacking this expression buffer, the expression
+is evaluated.
+```python
+def test_simple_expression():
+    run(Add(Add(1,2), Add(2,3)), 8) # Unpacking is expression evaluation.
+```
+Adding variables, and running loops are left as exercises for the reader.
+
 ## Development: Environment and testing
 
 **TODO**: `git clone`
