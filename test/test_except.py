@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from contexts_for_tests import pctrl, uctrl
 from pytest import raises
-from ydtpack import packb, unpackb, Unpacker, FormatError, StackError, OutOfData
+from tmsgpack import packb, unpackb, Unpacker, FormatError, StackError, OutOfData
 
 
 class DummyException(Exception):

@@ -33,17 +33,17 @@ typedef struct unpack_user {
     Py_ssize_t max_str_len, max_bin_len, max_list_len, max_dict_len;
 } unpack_user;
 
-typedef PyObject* ydtpack_unpack_object;
+typedef PyObject* tmsgpack_unpack_object;
 struct unpack_context;
 typedef struct unpack_context unpack_context;
 typedef int (*execute_fn)(unpack_context *ctx, const char* data, Py_ssize_t len, Py_ssize_t* off);
 
-static inline ydtpack_unpack_object unpack_callback_root(unpack_user* u)
+static inline tmsgpack_unpack_object unpack_callback_root(unpack_user* u)
 {
     return NULL;
 }
 
-static inline int unpack_callback_uint16(unpack_user* u, uint16_t d, ydtpack_unpack_object* o)
+static inline int unpack_callback_uint16(unpack_user* u, uint16_t d, tmsgpack_unpack_object* o)
 {
     PyObject *p = PyInt_FromLong((long)d);
     if (!p)
@@ -51,13 +51,13 @@ static inline int unpack_callback_uint16(unpack_user* u, uint16_t d, ydtpack_unp
     *o = p;
     return 0;
 }
-static inline int unpack_callback_uint8(unpack_user* u, uint8_t d, ydtpack_unpack_object* o)
+static inline int unpack_callback_uint8(unpack_user* u, uint8_t d, tmsgpack_unpack_object* o)
 {
     return unpack_callback_uint16(u, d, o);
 }
 
 
-static inline int unpack_callback_uint32(unpack_user* u, uint32_t d, ydtpack_unpack_object* o)
+static inline int unpack_callback_uint32(unpack_user* u, uint32_t d, tmsgpack_unpack_object* o)
 {
     PyObject *p = PyInt_FromSize_t((size_t)d);
     if (!p)
@@ -66,7 +66,7 @@ static inline int unpack_callback_uint32(unpack_user* u, uint32_t d, ydtpack_unp
     return 0;
 }
 
-static inline int unpack_callback_uint64(unpack_user* u, uint64_t d, ydtpack_unpack_object* o)
+static inline int unpack_callback_uint64(unpack_user* u, uint64_t d, tmsgpack_unpack_object* o)
 {
     PyObject *p;
     if (d > LONG_MAX) {
@@ -80,7 +80,7 @@ static inline int unpack_callback_uint64(unpack_user* u, uint64_t d, ydtpack_unp
     return 0;
 }
 
-static inline int unpack_callback_int32(unpack_user* u, int32_t d, ydtpack_unpack_object* o)
+static inline int unpack_callback_int32(unpack_user* u, int32_t d, tmsgpack_unpack_object* o)
 {
     PyObject *p = PyInt_FromLong(d);
     if (!p)
@@ -89,17 +89,17 @@ static inline int unpack_callback_int32(unpack_user* u, int32_t d, ydtpack_unpac
     return 0;
 }
 
-static inline int unpack_callback_int16(unpack_user* u, int16_t d, ydtpack_unpack_object* o)
+static inline int unpack_callback_int16(unpack_user* u, int16_t d, tmsgpack_unpack_object* o)
 {
     return unpack_callback_int32(u, d, o);
 }
 
-static inline int unpack_callback_int8(unpack_user* u, int8_t d, ydtpack_unpack_object* o)
+static inline int unpack_callback_int8(unpack_user* u, int8_t d, tmsgpack_unpack_object* o)
 {
     return unpack_callback_int32(u, d, o);
 }
 
-static inline int unpack_callback_int64(unpack_user* u, int64_t d, ydtpack_unpack_object* o)
+static inline int unpack_callback_int64(unpack_user* u, int64_t d, tmsgpack_unpack_object* o)
 {
     PyObject *p;
     if (d > LONG_MAX || d < LONG_MIN) {
@@ -111,7 +111,7 @@ static inline int unpack_callback_int64(unpack_user* u, int64_t d, ydtpack_unpac
     return 0;
 }
 
-static inline int unpack_callback_double(unpack_user* u, double d, ydtpack_unpack_object* o)
+static inline int unpack_callback_double(unpack_user* u, double d, tmsgpack_unpack_object* o)
 {
     PyObject *p = PyFloat_FromDouble(d);
     if (!p)
@@ -120,21 +120,21 @@ static inline int unpack_callback_double(unpack_user* u, double d, ydtpack_unpac
     return 0;
 }
 
-static inline int unpack_callback_float(unpack_user* u, float d, ydtpack_unpack_object* o)
+static inline int unpack_callback_float(unpack_user* u, float d, tmsgpack_unpack_object* o)
 {
     return unpack_callback_double(u, d, o);
 }
 
-static inline int unpack_callback_nil(unpack_user* u, ydtpack_unpack_object* o)
+static inline int unpack_callback_nil(unpack_user* u, tmsgpack_unpack_object* o)
 { Py_INCREF(Py_None); *o = Py_None; return 0; }
 
-static inline int unpack_callback_true(unpack_user* u, ydtpack_unpack_object* o)
+static inline int unpack_callback_true(unpack_user* u, tmsgpack_unpack_object* o)
 { Py_INCREF(Py_True); *o = Py_True; return 0; }
 
-static inline int unpack_callback_false(unpack_user* u, ydtpack_unpack_object* o)
+static inline int unpack_callback_false(unpack_user* u, tmsgpack_unpack_object* o)
 { Py_INCREF(Py_False); *o = Py_False; return 0; }
 
-static inline int unpack_callback_list(unpack_user* u, unsigned int n, ydtpack_unpack_object* o)
+static inline int unpack_callback_list(unpack_user* u, unsigned int n, tmsgpack_unpack_object* o)
 {
     if (n > u->max_list_len) {
         PyErr_Format(PyExc_ValueError, "%u exceeds max_list_len(%zd)", n, u->max_list_len);
@@ -148,7 +148,7 @@ static inline int unpack_callback_list(unpack_user* u, unsigned int n, ydtpack_u
     return 0;
 }
 
-static inline int unpack_callback_list_item(unpack_user* u, unsigned int current, ydtpack_unpack_object* c, ydtpack_unpack_object o)
+static inline int unpack_callback_list_item(unpack_user* u, unsigned int current, tmsgpack_unpack_object* c, tmsgpack_unpack_object o)
 {
     if (u->use_list)
         PyList_SET_ITEM(*c, current, o);
@@ -158,7 +158,7 @@ static inline int unpack_callback_list_item(unpack_user* u, unsigned int current
 }
 
 static inline int unpack_callback_list_end(
-    unpack_user* u, PyObject** object_type, ydtpack_unpack_object* c
+    unpack_user* u, PyObject** object_type, tmsgpack_unpack_object* c
 )
 {
     PyObject *new_c = PyObject_CallFunctionObjArgs(u->from_list, *object_type, *c, NULL);
@@ -172,7 +172,7 @@ static inline int unpack_callback_list_end(
     return 0;
 }
 
-static inline int unpack_callback_dict(unpack_user* u, unsigned int n, ydtpack_unpack_object* o)
+static inline int unpack_callback_dict(unpack_user* u, unsigned int n, tmsgpack_unpack_object* o)
 {
     if (n > u->max_dict_len) {
         PyErr_Format(PyExc_ValueError, "%u exceeds max_dict_len(%zd)", n, u->max_dict_len);
@@ -191,7 +191,7 @@ static inline int unpack_callback_dict(unpack_user* u, unsigned int n, ydtpack_u
     return 0;
 }
 
-static inline int unpack_callback_dict_item(unpack_user* u, unsigned int current, ydtpack_unpack_object* c, ydtpack_unpack_object k, ydtpack_unpack_object v)
+static inline int unpack_callback_dict_item(unpack_user* u, unsigned int current, tmsgpack_unpack_object* c, tmsgpack_unpack_object k, tmsgpack_unpack_object v)
 {
     if (u->strict_dict_key && !PyUnicode_CheckExact(k) && !PyBytes_CheckExact(k)) {
         PyErr_Format(PyExc_ValueError, "%.100s is not allowed for dict key when strict_dict_key=True", Py_TYPE(k)->tp_name);
@@ -201,7 +201,7 @@ static inline int unpack_callback_dict_item(unpack_user* u, unsigned int current
         PyUnicode_InternInPlace(&k);
     }
     if (u->object_as_pairs) {
-        ydtpack_unpack_object item = PyTuple_Pack(2, k, v);
+        tmsgpack_unpack_object item = PyTuple_Pack(2, k, v);
         if (!item)
             return -1;
         Py_DECREF(k);
@@ -218,7 +218,7 @@ static inline int unpack_callback_dict_item(unpack_user* u, unsigned int current
 }
 
 static inline int unpack_callback_dict_end(
-    unpack_user* u, PyObject** object_type, ydtpack_unpack_object* c
+    unpack_user* u, PyObject** object_type, tmsgpack_unpack_object* c
 ){
 
     PyObject *new_c = PyObject_CallFunctionObjArgs(u->from_dict, *object_type, *c, NULL);
@@ -232,7 +232,7 @@ static inline int unpack_callback_dict_end(
     return 0;
 }
 
-static inline int unpack_callback_raw(unpack_user* u, const char* b, const char* p, unsigned int l, ydtpack_unpack_object* o)
+static inline int unpack_callback_raw(unpack_user* u, const char* b, const char* p, unsigned int l, tmsgpack_unpack_object* o)
 {
     if (l > u->max_str_len) {
         PyErr_Format(PyExc_ValueError, "%u exceeds max_str_len(%zd)", l, u->max_str_len);
@@ -252,7 +252,7 @@ static inline int unpack_callback_raw(unpack_user* u, const char* b, const char*
     return 0;
 }
 
-static inline int unpack_callback_bin(unpack_user* u, const char* b, const char* p, unsigned int l, ydtpack_unpack_object* o)
+static inline int unpack_callback_bin(unpack_user* u, const char* b, const char* p, unsigned int l, tmsgpack_unpack_object* o)
 {
     if (l > u->max_bin_len) {
         PyErr_Format(PyExc_ValueError, "%u exceeds max_bin_len(%zd)", l, u->max_bin_len);

@@ -1,4 +1,4 @@
-"""Fallback pure Python implementation of ydtpack"""
+"""Fallback pure Python implementation of tmsgpack"""
 import sys
 import struct
 
@@ -69,7 +69,7 @@ def unpackb(packed, *, unpack_ctrl):
 
     Raises ``ExtraData`` when *packed* contains extra bytes.
     Raises ``ValueError`` when *packed* is incomplete.
-    Raises ``FormatError`` when *packed* is not valid ydtpack.
+    Raises ``FormatError`` when *packed* is not valid tmsgpack.
     Raises ``StackError`` when *packed* contains too nested.
     Other exceptions can be raised during unpacking.
 
@@ -155,7 +155,7 @@ class Unpacker:
 
     Raises ``ExtraData`` when *packed* contains extra bytes.
     Raises ``OutOfData`` when *packed* is incomplete.
-    Raises ``FormatError`` when *packed* is not valid ydtpack.
+    Raises ``FormatError`` when *packed* is not valid tmsgpack.
     Raises ``StackError`` when *packed* contains too nested.
     Other exceptions can be raised during unpacking.
     """
@@ -478,7 +478,7 @@ class Packer:
 
     Raises ``ExtraData`` when *packed* contains extra bytes.
     Raises ``OutOfData`` when *packed* is incomplete.
-    Raises ``FormatError`` when *packed* is not valid ydtpack.
+    Raises ``FormatError`` when *packed* is not valid tmsgpack.
     Raises ``StackError`` when *packed* contains too nested.
     Other exceptions can be raised during unpacking.
     """

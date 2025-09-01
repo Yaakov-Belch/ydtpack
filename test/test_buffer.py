@@ -3,7 +3,7 @@ from contexts_for_tests import pctrl, uctrl
 
 import sys
 import pytest
-from ydtpack import packb, unpackb
+from tmsgpack import packb, unpackb
 
 
 def test_unpack_buffer():

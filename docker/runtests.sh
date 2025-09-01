@@ -9,9 +9,9 @@ for V in "${PYTHON_VERSIONS[@]}"; do
     $PYBIN/python setup.py install
     rm -rf build/       # Avoid lib build by narrow Python is used by wide python
     $PYBIN/pip install pytest
-    pushd test          # prevent importing ydtpack package in current directory.
+    pushd test          # prevent importing tmsgpack package in current directory.
     $PYBIN/python -c 'import sys; print(hex(sys.maxsize))'
-    $PYBIN/python -c 'from ydtpack import _cydtpack'  # Ensure extension is available
+    $PYBIN/python -c 'from tmsgpack import _ctmsgpack'  # Ensure extension is available
     $PYBIN/pytest -v .
     popd
 done

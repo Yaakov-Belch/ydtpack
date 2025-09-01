@@ -15,7 +15,7 @@ class PackConfig:
         Use single precision float type for float. (default: False)
 
     :param bool use_bin_type:
-        Use bin type introduced in ydtpack spec 2.0 for bytes.
+        Use bin type introduced in tmsgpack spec 2.0 for bytes.
         It also enables str8 type for unicode. (default: True)
 
     :param bool strict_types:
@@ -50,11 +50,11 @@ class UnpackConfig:
         Used as `file_like.read(read_size)`. (default: `min(16*1024, max_buffer_size)`)
 
     :param bool use_list:
-        If true, unpack ydtpack list to Python list.
+        If true, unpack tmsgpack list to Python list.
         Otherwise, unpack to Python tuple. (default: True)
 
     :param bool raw:
-        If true, unpack ydtpack strings (raw) to Python bytes.
+        If true, unpack tmsgpack strings (raw) to Python bytes.
         Otherwise, unpack to Python str by decoding with UTF-8 encoding (default: False).
 
     :param bool strict_dict_key:
@@ -66,7 +66,7 @@ class UnpackConfig:
 
     :param str unicode_errors:
         The error handler for decoding unicode. (default: 'strict')
-        This option should be used only when you have ydtpack data which
+        This option should be used only when you have tmsgpack data which
         contains invalid UTF-8 string.
 
     :param int max_buffer_size:
@@ -113,11 +113,11 @@ class UnpackConfig:
         self.object_as_pairs = object_as_pairs
         self.unicode_errors  = unicode_errors
 
-if os.environ.get("YDTPACK_PUREPYTHON"):
+if os.environ.get("TMSGPACK_PUREPYTHON"):
     from .fallback import Packer, unpackb, Unpacker
 else:
     try:
-        from ._cydtpack import Packer, unpackb, Unpacker
+        from ._ctmsgpack import Packer, unpackb, Unpacker
     except ImportError:
         from .fallback import Packer, unpackb, Unpacker
 

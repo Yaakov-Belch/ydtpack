@@ -18,7 +18,7 @@
 #ifndef MSGPACK_UNPACK_DEFINE_H__
 #define MSGPACK_UNPACK_DEFINE_H__
 
-#include "ydtpack/sysdep.h"
+#include "tmsgpack/sysdep.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -77,7 +77,7 @@ typedef enum {
 
     ACS_RAW_VALUE,
     ACS_BIN_VALUE,
-} ydtpack_unpack_state;
+} tmsgpack_unpack_state;
 
 
 typedef enum {
@@ -85,11 +85,11 @@ typedef enum {
     CT_DICT_KEY,
     CT_DICT_VALUE,
     CT_LIST_ITEM,
-} ydtpack_container_type;
+} tmsgpack_container_type;
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* ydtpack/unpack_define.h */
+#endif /* tmsgpack/unpack_define.h */

@@ -1,5 +1,5 @@
 include setup.py
 include COPYING
 include README.md
-recursive-include ydtpack *.h *.c *.pyx *.cpp
+recursive-include tmsgpack *.h *.c *.pyx *.cpp
 recursive-include test *.py

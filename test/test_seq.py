@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from contexts_for_tests import pctrl, uctrl
 import io
-import ydtpack as ydtpack
+import tmsgpack as tmsgpack
 
 
 binarydata = bytes(bytearray(range(256)))
@@ -14,7 +14,7 @@ def gen_binary_data(idx):
 def test_exceeding_unpacker_read_size():
     dumpf = io.BytesIO()
 
-    packer = ydtpack.Packer(pack_ctrl=pctrl())
+    packer = tmsgpack.Packer(pack_ctrl=pctrl())
 
     NUMBER_OF_STRINGS = 6
     read_size = 16
@@ -30,7 +30,7 @@ def test_exceeding_unpacker_read_size():
     f = io.BytesIO(dumpf.getvalue())
     dumpf.close()
 
-    unpacker = ydtpack.Unpacker(f, unpack_ctrl=uctrl(read_size=read_size, use_list=1))
+    unpacker = tmsgpack.Unpacker(f, unpack_ctrl=uctrl(read_size=read_size, use_list=1))
 
     read_count = 0
     for idx, o in enumerate(unpacker):

@@ -20,7 +20,7 @@ from .exceptions import (
 cdef object giga = 1_000_000_000
 
 cdef extern from "unpack.h":
-    ctypedef struct ydtpack_user:
+    ctypedef struct tmsgpack_user:
         bint use_list
         bint raw
         bint object_as_pairs
@@ -37,7 +37,7 @@ cdef extern from "unpack.h":
         Py_ssize_t max_dict_len
 
     ctypedef struct unpack_context:
-        ydtpack_user user
+        tmsgpack_user user
         PyObject* obj
         Py_ssize_t count
 
@@ -104,7 +104,7 @@ def unpackb(object packed, *, object unpack_ctrl=None):
 
     Raises ``ExtraData`` when *packed* contains extra bytes.
     Raises ``ValueError`` when *packed* is incomplete.
-    Raises ``FormatError`` when *packed* is not valid ydtpack.
+    Raises ``FormatError`` when *packed* is not valid tmsgpack.
     Raises ``StackError`` when *packed* contains too nested.
     Other exceptions can be raised during unpacking.
 
@@ -193,7 +193,7 @@ cdef class Unpacker(object):
 
     Raises ``ExtraData`` when *packed* contains extra bytes.
     Raises ``OutOfData`` when *packed* is incomplete.
-    Raises ``FormatError`` when *packed* is not valid ydtpack.
+    Raises ``FormatError`` when *packed* is not valid tmsgpack.
     Raises ``StackError`` when *packed* contains too nested.
     Other exceptions can be raised during unpacking.
     """

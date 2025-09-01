@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# ydtpack documentation build configuration file, created by
+# tmsgpack documentation build configuration file, created by
 # sphinx-quickstart on Sun Feb 24 14:20:50 2013.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -40,7 +40,7 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "ydtpack"
+project = "tmsgpack"
 copyright = "Inada Naoki"
 
 # The version info for the project you're documenting, acts as replacement for
@@ -164,7 +164,7 @@ html_static_path = ["_static"]
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "ydtpackdoc"
+htmlhelp_basename = "tmsgpackdoc"
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -181,7 +181,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "ydtpack.tex", "ydtpack Documentation", "Author", "manual"),
+    ("index", "tmsgpack.tex", "tmsgpack Documentation", "Author", "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -209,7 +209,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [("index", "ydtpack", "ydtpack Documentation", ["Author"], 1)]
+man_pages = [("index", "tmsgpack", "tmsgpack Documentation", ["Author"], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -223,10 +223,10 @@ man_pages = [("index", "ydtpack", "ydtpack Documentation", ["Author"], 1)]
 texinfo_documents = [
     (
         "index",
-        "ydtpack",
-        "ydtpack Documentation",
+        "tmsgpack",
+        "tmsgpack Documentation",
         "Author",
-        "ydtpack",
+        "tmsgpack",
         "One line description of project.",
         "Miscellaneous",
     ),
@@ -245,7 +245,7 @@ texinfo_documents = [
 # -- Options for Epub output ---------------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = "ydtpack"
+epub_title = "tmsgpack"
 epub_author = "Author"
 epub_publisher = "Author"
 epub_copyright = "2013, Author"

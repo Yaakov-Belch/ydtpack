@@ -7,10 +7,10 @@ Packer
 autoreset
 ~~~~~~~~~
 
-When you used ``autoreset=False`` option of :class:`~ydtpack.Packer`, 
+When you used ``autoreset=False`` option of :class:`~tmsgpack.Packer`, 
 ``pack()`` method doesn't return packed ``bytes``.
 
-You can use :meth:`~ydtpack.Packer.bytes` or :meth:`~ydtpack.Packer.getbuffer` to
+You can use :meth:`~tmsgpack.Packer.bytes` or :meth:`~tmsgpack.Packer.getbuffer` to
 get packed data.
 
 ``bytes()`` returns ``bytes`` object.  ``getbuffer()`` returns some bytes-like

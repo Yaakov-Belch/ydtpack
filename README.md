@@ -1,8 +1,8 @@
-# ydtpack
+# tmsgpack
 msgpack-inspired serialization of typed data objects.
 
 # Create a virtual environment in your project directory
-cd ~/git/ydtpack
+cd ~/git/tmsgpack
 python3 -m venv venv
 
 # Activate the virtual environment

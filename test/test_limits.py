@@ -2,7 +2,7 @@
 from contexts_for_tests import pctrl, uctrl
 import pytest
 
-from ydtpack import (
+from tmsgpack import (
     packb,
     unpackb,
     Packer,

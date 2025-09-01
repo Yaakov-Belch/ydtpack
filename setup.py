@@ -47,21 +47,21 @@ class BuildExt(build_ext):
         except NoCython:
             print("WARNING")
             print("Cython is required for building extension from checkout.")
-            print("Install Cython >= 0.16 or install ydtpack from PyPI.")
+            print("Install Cython >= 0.16 or install tmsgpack from PyPI.")
             print("Falling back to pure Python implementation.")
             return
         try:
             return build_ext.build_extension(self, ext)
         except Exception as e:
             print("WARNING: Failed to compile extension modules.")
-            print("ydtpack uses fallback pure python implementation.")
+            print("tmsgpack uses fallback pure python implementation.")
             print(e)
 
 
 # Cython is required for sdist
 class Sdist(sdist):
     def __init__(self, *args, **kwargs):
-        cythonize("ydtpack/_cydtpack.pyx")
+        cythonize("tmsgpack/_ctmsgpack.pyx")
         sdist.__init__(self, *args, **kwargs)
 
 
@@ -76,8 +76,8 @@ ext_modules = []
 if not PYPY and not os.environ.get("MSGPACK_PUREPYTHON"):
     ext_modules.append(
         Extension(
-            "ydtpack._cydtpack",
-            sources=["ydtpack/_cydtpack.cpp"],
+            "tmsgpack._ctmsgpack",
+            sources=["tmsgpack/_ctmsgpack.cpp"],
             libraries=libraries,
             include_dirs=["."],
             define_macros=macros,
@@ -90,5 +90,5 @@ setup(
     cmdclass={"build_ext": BuildExt, "sdist": Sdist},
     ext_modules=ext_modules,
     setup_requires=['Cython'],
-    packages=["ydtpack"],
+    packages=["tmsgpack"],
 )

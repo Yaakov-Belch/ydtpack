@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from contexts_for_tests import pctrl, uctrl
-from ydtpack import packb, unpackb
+from tmsgpack import packb, unpackb
 from collections import namedtuple
 
 

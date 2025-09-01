@@ -3,7 +3,7 @@
 ## Wheels
 
 Wheels for macOS and Linux are built on Travis and AppVeyr, in
-[methane/ydtpack-wheels](https://github.com/methane/ydtpack-wheels) repository.
+[methane/tmsgpack-wheels](https://github.com/methane/tmsgpack-wheels) repository.
 
 Wheels for Windows are built on Github Actions in this repository.
 

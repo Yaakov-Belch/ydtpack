@@ -1,4 +1,4 @@
-from ydtpack import PackConfig, UnpackConfig
+from tmsgpack import PackConfig, UnpackConfig
 from dataclasses import dataclass
 
 @dataclass

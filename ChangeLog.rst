@@ -1,7 +1,7 @@
-0.0.1 ydtpack
-=============
+0.0.1 tmsgpack
+==============
 
-* This package is based on ydtpack v1.0.5 which is based on ydtpack v1.0.5
+* This package is based on msgpack v1.0.5.
 
 
 

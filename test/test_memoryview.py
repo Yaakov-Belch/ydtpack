@@ -2,7 +2,7 @@
 from contexts_for_tests import pctrl, uctrl
 import pytest
 from array import array
-from ydtpack import packb, unpackb
+from tmsgpack import packb, unpackb
 import sys
 
 
@@ -93,7 +93,7 @@ def test_bin32_from_float():
 
 
 def test_multidim_memoryview():
-    # See https://github.com/ydtpack/ydtpack-python/issues/526
+    # See https://github.com/tmsgpack/tmsgpack-python/issues/526
     view = memoryview(b"\00" * 6)
     data = view.cast(view.format, (3, 2))
     packed = packb(data, pack_ctrl=pctrl())

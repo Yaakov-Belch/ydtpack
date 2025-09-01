@@ -1,7 +1,7 @@
-ydtpack document
-================
+tmsgpack document
+=================
 
-`MessagePack <http://ydtpack.org>`_ is a efficient format for inter
+`MessagePack <http://tmsgpack.org>`_ is a efficient format for inter
 language data exchange.
 
 .. toctree::

@@ -30,16 +30,16 @@ extern "C" {
 #define inline __inline
 #endif
 
-typedef struct ydtpack_packer {
+typedef struct tmsgpack_packer {
     char *buf;
     size_t length;
     size_t buf_size;
     bool use_bin_type;
-} ydtpack_packer;
+} tmsgpack_packer;
 
 typedef struct Packer Packer;
 
-static inline int ydtpack_pack_write(ydtpack_packer* pk, const char *data, size_t l)
+static inline int tmsgpack_pack_write(tmsgpack_packer* pk, const char *data, size_t l)
 {
     char* buf = pk->buf;
     size_t bs = pk->buf_size;
@@ -62,14 +62,14 @@ static inline int ydtpack_pack_write(ydtpack_packer* pk, const char *data, size_
     return 0;
 }
 
-#define ydtpack_pack_append_buffer(user, buf, len) \
-        return ydtpack_pack_write(user, (const char*)buf, len)
+#define tmsgpack_pack_append_buffer(user, buf, len) \
+        return tmsgpack_pack_write(user, (const char*)buf, len)
 
 #include "pack_template.h"
 
 // return -2 when o is too long
 static inline int
-ydtpack_pack_unicode(ydtpack_packer *pk, PyObject *o, long long limit)
+tmsgpack_pack_unicode(tmsgpack_packer *pk, PyObject *o, long long limit)
 {
     assert(PyUnicode_Check(o));
 
@@ -82,10 +82,10 @@ ydtpack_pack_unicode(ydtpack_packer *pk, PyObject *o, long long limit)
         return -2;
     }
 
-    int ret = ydtpack_pack_raw(pk, len);
+    int ret = tmsgpack_pack_raw(pk, len);
     if (ret) return ret;
 
-    return ydtpack_pack_raw_body(pk, buf, len);
+    return tmsgpack_pack_raw_body(pk, buf, len);
 }
 
 #ifdef __cplusplus

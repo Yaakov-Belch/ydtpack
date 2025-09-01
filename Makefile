@@ -1,4 +1,4 @@
-PYTHON_SOURCES = ydtpack test setup.py
+PYTHON_SOURCES = tmsgpack test setup.py
 
 .PHONY: all
 all: cython
@@ -14,13 +14,13 @@ pyupgrade:
 
 .PHONY: cython
 cython:
-	cython --cplus ydtpack/_cydtpack.pyx
+	cython --cplus tmsgpack/_ctmsgpack.pyx
 
 .PHONY: test
 test: cython
 	pip install -e .
 	pytest -v test
-	YDTPACK_PUREPYTHON=1 pytest -v test
+	TMSGPACK_PUREPYTHON=1 pytest -v test
 
 .PHONY: serve-doc
 serve-doc: all
@@ -29,10 +29,10 @@ serve-doc: all
 .PHONY: clean
 clean:
 	rm -rf build
-	rm -f ydtpack/_cydtpack.cpp
-	rm -f ydtpack/_cydtpack.*.so
-	rm -f ydtpack/_cydtpack.*.pyd
-	rm -rf ydtpack/__pycache__
+	rm -f tmsgpack/_ctmsgpack.cpp
+	rm -f tmsgpack/_ctmsgpack.*.so
+	rm -f tmsgpack/_ctmsgpack.*.pyd
+	rm -rf tmsgpack/__pycache__
 	rm -rf test/__pycache__
 
 .PHONY: update-docker

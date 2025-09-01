@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 from contexts_for_tests import pctrl, uctrl
 import io
-from ydtpack import Unpacker, BufferFull
-from ydtpack import pack, packb
-from ydtpack.exceptions import OutOfData
+from tmsgpack import Unpacker, BufferFull
+from tmsgpack import pack, packb
+from tmsgpack.exceptions import OutOfData
 from pytest import raises
 
 

@@ -1,7 +1,7 @@
 API reference
 =============
 
-.. module:: ydtpack
+.. module:: tmsgpack
 
 .. autofunction:: pack
 
@@ -34,11 +34,11 @@ API reference
 exceptions
 ----------
 
-These exceptions are accessible via `ydtpack` package.
-(For example, `ydtpack.OutOfData` is shortcut
-for `ydtpack.exceptions.OutOfData`)
+These exceptions are accessible via `tmsgpack` package.
+(For example, `tmsgpack.OutOfData` is shortcut
+for `tmsgpack.exceptions.OutOfData`)
 
-.. automodule:: ydtpack.exceptions
+.. automodule:: tmsgpack.exceptions
     :members:
     :undoc-members:
     :show-inheritance:

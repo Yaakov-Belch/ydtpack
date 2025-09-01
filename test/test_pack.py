@@ -8,7 +8,7 @@ import sys
 import pytest
 from pytest import raises, xfail
 
-from ydtpack import packb, unpackb, Unpacker, Packer, pack
+from tmsgpack import packb, unpackb, Unpacker, Packer, pack
 
 
 def check(data, use_list=False):

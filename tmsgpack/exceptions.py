@@ -16,7 +16,7 @@ class OutOfData(UnpackException):
 
 
 class FormatError(ValueError, UnpackException):
-    """Invalid ydtpack format"""
+    """Invalid tmsgpack format"""
 
 
 class StackError(ValueError, UnpackException):
