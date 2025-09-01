@@ -139,14 +139,6 @@ def testDictSize(sizes=[0, 5, 50, 1000]):
         assert unpacker.unpack() == {i: i * 2 for i in range(size)}
 
 
-def test_odict():
-    seq = ((b"one", 1), (b"two", 2), (b"three", 3), (b"four", 4))
-    od = OrderedDict(seq)
-    assert unpackb(packb(od, pack_ctrl=pctrl()), unpack_ctrl=uctrl(use_list=1)) == dict(seq)
-
-    assert unpackb(packb(od, pack_ctrl=pctrl()), unpack_ctrl=uctrl(object_as_pairs=True, use_list=1)) == seq
-
-
 def test_pairlist():
     pairlist = ((b"a", 1), (2, b"b"), (b"foo", b"bar"))
     packer = Packer(pack_ctrl=pctrl())

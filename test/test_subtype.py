@@ -2,10 +2,8 @@
 from contexts_for_tests import pctrl, uctrl
 from tmsgpack import packb, unpackb
 from collections import namedtuple
+from pytest import raises
 
-
-class MyList(list):
-    pass
 
 
 class MyDict(dict):
@@ -15,11 +13,14 @@ class MyDict(dict):
 class MyTuple(tuple):
     pass
 
+class MyList(list):
+    pass
 
 MyNamedTuple = namedtuple("MyNamedTuple", "x y")
 
 
 def test_types():
-    assert packb(MyDict(), pack_ctrl=pctrl()) == packb(dict(), pack_ctrl=pctrl())
-    assert packb(MyList(), pack_ctrl=pctrl()) == packb(list(), pack_ctrl=pctrl())
-    assert packb(MyNamedTuple(1, 2), pack_ctrl=pctrl()) == packb((1, 2), pack_ctrl=pctrl())
+    with raises(TypeError): packb(MyDict(),  pack_ctrl=pctrl())
+    with raises(TypeError): packb(MyList(),  pack_ctrl=pctrl())
+    with raises(TypeError): packb(MyTuple(), pack_ctrl=pctrl())
+    with raises(TypeError): packb(MyNamedTuple(1, 2), pack_ctrl=pctrl())

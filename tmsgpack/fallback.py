@@ -49,11 +49,8 @@ TYPE_EXT  = 5
 
 DEFAULT_RECURSE_LIMIT = 511
 
-def _check_type_strict(obj, t, type=type, tuple=tuple):
-    if type(t) is tuple:
-        return type(obj) in t
-    else:
-        return type(obj) is t
+def _check_type_strict(obj, t, type=type):
+    return type(obj) is t
 
 
 def _get_data_from_buffer(obj):
@@ -492,6 +489,7 @@ class Packer:
            raise(ValueError("No pack_ctrl supplied."))
 
         o = pack_ctrl.options
+        self._list_types = (list, tuple) if o.tuple_as_list else (list,)
         self._strict_types = o.strict_types
         self._use_float = o.use_single_float
         self._use_bin_type = o.use_bin_type
@@ -511,12 +509,10 @@ class Packer:
         check=isinstance,
         check_type_strict=_check_type_strict,
     ):
+        list_types = self._list_types
         default_used = False
         if self._strict_types:
             check = check_type_strict
-            list_types = list
-        else:
-            list_types = (list, tuple)
         while True:
             if nest_limit < 0:
                 raise ValueError("recursion limit exceeded")
@@ -575,14 +571,14 @@ class Packer:
                 if self._use_float:
                     return self._buffer.write(struct.pack(">Bf", 0xCA, obj))
                 return self._buffer.write(struct.pack(">Bd", 0xCB, obj))
-            if check(obj, list_types):
+            if type(obj) in list_types:
                 n = len(obj)
                 self._pack_list_header(n)
                 self._pack(None, nest_limit - 1)   # <= XXX
                 for i in range(n):
                     self._pack(obj[i], nest_limit - 1)
                 return
-            if check(obj, dict):
+            if type(obj) is dict:
                 _items = sorted(obj.items()) if self._sort_keys else obj.items()
                 return self._pack_dict_pairs(len(obj), None, _items, nest_limit - 1)
 

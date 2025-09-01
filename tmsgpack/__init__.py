@@ -18,13 +18,14 @@ class PackConfig:
         Use bin type introduced in tmsgpack spec 2.0 for bytes.
         It also enables str8 type for unicode. (default: True)
 
+    :param bool tuple_as_list:
+        If true, tuples are serialized as lists.  (default: True)
+        Otherwise, tuples are passed to pack_ctrl.from_obj(?).
+
     :param bool strict_types:
-        If set to true, types will be checked to be exact. Derived classes
-        from serializeable types will not be serialized and will be
-        treated as unsupported type and forwarded to default.
-        Additionally tuples will not be serialized as lists.
-        This is useful when trying to implement accurate serialization
-        for python types. (default: False)
+        If set to true, types will be checked to be exact. (default: False)
+        Derived classes are distinct and passed to pack_ctrl.from_obj(?).
+        Dicts, lists and tuples are not affected by strict_types.
 
     :param str unicode_errors:
         The error handler for encoding unicode. (default: 'strict')
@@ -34,9 +35,11 @@ class PackConfig:
         Sort output dictionaries by key. (default: False)
     """
 
-    def __init__(self, use_single_float=False, use_bin_type=True, strict_types=False,
+    def __init__(self, use_single_float=False, use_bin_type=True,
+                 tuple_as_list=True, strict_types=False,
                  unicode_errors='strict', sort_keys=False):
         self.use_single_float = use_single_float
+        self.tuple_as_list    = tuple_as_list
         self.use_bin_type     = use_bin_type
         self.strict_types     = strict_types
         self.unicode_errors   = unicode_errors

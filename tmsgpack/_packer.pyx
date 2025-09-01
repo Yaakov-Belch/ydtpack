@@ -70,6 +70,7 @@ cdef class Packer(object):
     cdef object _default
     cdef object _berrors
     cdef const char *unicode_errors
+    cdef bint tuple_as_list
     cdef bint strict_types
     cdef bint use_float
     cdef bool sort_keys
@@ -88,8 +89,9 @@ cdef class Packer(object):
 
         o = pack_ctrl.options
 
-        self.use_float = o.use_single_float
-        self.strict_types = o.strict_types
+        self.use_float       = o.use_single_float
+        self.tuple_as_list   = o.tuple_as_list
+        self.strict_types    = o.strict_types
         self.pk.use_bin_type = o.use_bin_type
         if default is not None:
             if not PyCallable_Check(default):
@@ -122,6 +124,7 @@ cdef class Packer(object):
         cdef int default_used = 0
         cdef bint strict_types = self.strict_types
         cdef Py_buffer view
+        cdef tuple_as_list = self.tuple_as_list
 
         if nest_limit < 0:
             raise ValueError("recursion limit exceeded.")
@@ -197,21 +200,7 @@ cdef class Packer(object):
                         if ret != 0: break
                         ret = self._pack(v, nest_limit-1)
                         if ret != 0: break
-            elif not strict_types and PyDict_Check(o):
-                L = len(o)
-                if L > ITEM_LIMIT:
-                    raise ValueError("dict is too large")
-                ret = tmsgpack_pack_dict(&self.pk, L)
-                if ret != 0: return ret                 #    XXX
-                ret = self._pack(None, nest_limit-1)    # <= XXX
-                if ret == 0:
-                    _items = sorted(o.items()) if self.sort_keys else o.items()
-                    for k, v in _items:
-                        ret = self._pack(k, nest_limit-1)
-                        if ret != 0: break
-                        ret = self._pack(v, nest_limit-1)
-                        if ret != 0: break
-            elif PyList_CheckExact(o) if strict_types else (PyTuple_Check(o) or PyList_Check(o)):
+            elif PyList_CheckExact(o) or (tuple_as_list and PyTuple_CheckExact(o)):
                 L = Py_SIZE(o)
                 if L > ITEM_LIMIT:
                     raise ValueError("list is too large")
